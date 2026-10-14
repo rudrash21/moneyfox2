@@ -94,13 +94,10 @@ export const PublicStorefront: React.FC<StorefrontProps> = ({
             {/* Dual CTA Buttons */}
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
-                onClick={() => {
-                  if (onViewProductDetail) onViewProductDetail('chill-black');
-                  else onNavigate('product-detail');
-                }}
+                onClick={() => onNavigate('products')}
                 className="btn-gold-sheen text-noir-950 text-xs uppercase tracking-luxury font-bold px-8 py-4 w-full sm:w-auto inline-flex items-center justify-center shadow-amber-glow cursor-pointer"
               >
-                <span>Shop The ₹2,000 Drop</span>
+                <span>Shop The Collection</span>
                 <ArrowRight className="w-4 h-4 ml-2" />
               </button>
               <a

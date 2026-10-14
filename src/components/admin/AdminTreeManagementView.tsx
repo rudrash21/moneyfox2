@@ -252,7 +252,7 @@ export const AdminTreeManagementView: React.FC = () => {
             LEFT / RIGHT BALANCE
           </span>
           <div className="font-serif text-4xl text-amberfox font-bold">1:1</div>
-          <p className="text-[11px] font-mono text-parchment-400">1,500 PV Left • 1,500 PV Right</p>
+          <p className="text-[11px] font-mono text-parchment-400">15 Left Team • 15 Right Team</p>
         </div>
 
         <div className="bg-noir-900 hairline-border p-6 space-y-2">
@@ -330,9 +330,9 @@ export const AdminTreeManagementView: React.FC = () => {
               <p className="font-serif text-sm font-semibold text-parchment-100">{rootNode.name}</p>
               <p className="text-[10px] font-mono text-amberfox-gold">{rootNode.memberId}</p>
               <div className="flex justify-between text-[9px] font-mono text-parchment-400 mt-2 pt-2 border-t border-amberfox/10">
-                <span>L: {rootNode.leftPv} PV</span>
+                <span>L: {rootNode.leftPv}</span>
                 <span>Level {rootNode.level}</span>
-                <span>R: {rootNode.rightPv} PV</span>
+                <span>R: {rootNode.rightPv}</span>
               </div>
             </div>
 
@@ -511,12 +511,12 @@ export const AdminTreeManagementView: React.FC = () => {
               <span className="text-amberfox font-semibold">Level {currentNode.level} of 9</span>
             </div>
             <div className="flex justify-between py-1 border-b border-amberfox/10">
-              <span className="text-parchment-400">Left PV:</span>
-              <span className="text-parchment-200">{currentNode.leftPv} PV</span>
+              <span className="text-parchment-400">Left Team Volume:</span>
+              <span className="text-parchment-200">{currentNode.leftPv}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-amberfox/10">
-              <span className="text-parchment-400">Right PV:</span>
-              <span className="text-parchment-200">{currentNode.rightPv} PV</span>
+              <span className="text-parchment-400">Right Team Volume:</span>
+              <span className="text-parchment-200">{currentNode.rightPv}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-amberfox/10">
               <span className="text-parchment-400">Parent Sponsor:</span>

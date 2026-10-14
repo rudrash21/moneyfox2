@@ -1,5 +1,6 @@
 export type ScreenView =
   | 'storefront'
+  | 'products'
   | 'product-detail'
   | 'cart-review'
   | 'delivery-sponsor'

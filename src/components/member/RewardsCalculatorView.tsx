@@ -161,13 +161,13 @@ export const RewardsCalculatorView: React.FC<RewardsCalculatorProps> = ({ onNavi
             From schedule to ledger
           </h4>
           <p className="text-xs text-parchment-400 font-light leading-relaxed">
-            Actual credits are shown in your wallet after eligibility review. PV points are distinct from INR and do not represent a cash balance.
+            Actual credits are shown in your wallet after eligibility review. Rewards are disbursed strictly upon verified product distributions and completed tree levels.
           </p>
           <button
             onClick={onNavigateToPV}
             className="hairline-border px-4 py-2 text-xs font-mono uppercase tracking-wider text-amberfox hover:border-amberfox flex items-center gap-1 cursor-pointer"
           >
-            <span>VIEW NETWORK PV</span>
+            <span>VIEW REFERRALS &amp; TEAM</span>
             <ArrowRight className="w-3.5 h-3.5 ml-1" />
           </button>
         </div>

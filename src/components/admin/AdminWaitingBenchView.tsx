@@ -118,7 +118,7 @@ export const AdminWaitingBenchView: React.FC = () => {
   const handlePlaceInTree = (member: BenchMember) => {
     setBenchMembers(benchMembers.filter((m) => m.id !== member.id));
     setActionNotice(
-      `Placed ${member.name} (${member.memberId}) into Binary Tree under sponsor ${member.sponsorId}. 100 PV allocated.`
+      `Placed ${member.name} (${member.memberId}) into Binary Tree under sponsor ${member.sponsorId}. Member placed successfully.`
     );
   };
 

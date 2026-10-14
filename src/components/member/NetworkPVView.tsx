@@ -39,10 +39,10 @@ export const NetworkPVView: React.FC<NetworkPVProps> = ({ onOpenBinaryTree }) =>
           PRIVATE GUILD / MEMBER EXPERIENCE
         </p>
         <h1 className="font-serif text-3xl sm:text-4xl text-parchment-100 uppercase tracking-wider mt-1">
-          Network PV &amp; referrals
+          Referrals &amp; Network Team
         </h1>
         <p className="text-xs text-parchment-400 font-light mt-1">
-          Follow contributions and referral status without confusing points with money.
+          Follow direct member orders, team balance, and referral network placement.
         </p>
       </div>
 
@@ -50,17 +50,17 @@ export const NetworkPVView: React.FC<NetworkPVProps> = ({ onOpenBinaryTree }) =>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-noir-900 hairline-border p-6 space-y-2">
           <span className="font-mono text-[10px] uppercase tracking-luxury text-amberfox-gold">
-            LEFT CONTRIBUTION
+            LEFT TEAM ORDERS
           </span>
-          <div className="font-serif text-4xl text-parchment-100 font-bold">1,500 PV</div>
+          <div className="font-serif text-4xl text-parchment-100 font-bold">15 Orders</div>
           <p className="text-[11px] font-mono text-parchment-400">15 paid &amp; placed members</p>
         </div>
 
         <div className="bg-noir-900 hairline-border p-6 space-y-2">
           <span className="font-mono text-[10px] uppercase tracking-luxury text-amberfox-gold">
-            RIGHT CONTRIBUTION
+            RIGHT TEAM ORDERS
           </span>
-          <div className="font-serif text-4xl text-parchment-100 font-bold">1,500 PV</div>
+          <div className="font-serif text-4xl text-parchment-100 font-bold">15 Orders</div>
           <p className="text-[11px] font-mono text-parchment-400">15 paid &amp; placed members</p>
         </div>
 
@@ -137,11 +137,11 @@ export const NetworkPVView: React.FC<NetworkPVProps> = ({ onOpenBinaryTree }) =>
           <div className="grid grid-cols-2 gap-4 text-center">
             <div className="p-3 bg-noir-950 hairline-border">
               <span className="text-[10px] font-mono text-parchment-400 uppercase">LEFT</span>
-              <div className="font-serif text-2xl font-bold text-amberfox">1,500 PV</div>
+              <div className="font-serif text-2xl font-bold text-amberfox">15 Orders</div>
             </div>
             <div className="p-3 bg-noir-950 hairline-border">
               <span className="text-[10px] font-mono text-parchment-400 uppercase">RIGHT</span>
-              <div className="font-serif text-2xl font-bold text-amberfox">1,500 PV</div>
+              <div className="font-serif text-2xl font-bold text-amberfox">15 Orders</div>
             </div>
           </div>
 
@@ -152,11 +152,11 @@ export const NetworkPVView: React.FC<NetworkPVProps> = ({ onOpenBinaryTree }) =>
           </div>
 
           <p className="text-[11px] font-light text-parchment-400 leading-relaxed">
-            Each verified unit contributes 100 PV. Bench contributions are shown separately until placement is validated.
+            Each verified garment order activates a member in the network team. Bench orders are placed following verification.
           </p>
 
           <p className="text-[11px] font-mono text-amberfox-soft leading-relaxed">
-            PV means volume points. It is not INR, withdrawable money or a guaranteed commission.
+            Commissions are disbursed strictly in INR upon verified order distributions and completed tree levels.
           </p>
         </div>
       </div>
@@ -240,7 +240,7 @@ export const NetworkPVView: React.FC<NetworkPVProps> = ({ onOpenBinaryTree }) =>
                   <td className="py-3 text-parchment-300">{m.placement}</td>
                   <td className="py-3 text-right">
                     <span className={m.contributionPV > 0 ? 'text-amberfox-gold font-semibold' : 'text-parchment-600'}>
-                      {m.contributionPV} PV {m.placement.includes('bench') && m.contributionPV > 0 ? '• unplaced' : ''}
+                      {m.contributionPV > 0 ? '1 Order' : '0 Orders'} {m.placement.includes('bench') && m.contributionPV > 0 ? '• unplaced' : ''}
                     </span>
                   </td>
                 </tr>

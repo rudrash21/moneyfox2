@@ -143,7 +143,7 @@ export const AdminProductsInventoryView: React.FC = () => {
             </div>
 
             <p className="text-[11px] font-mono text-parchment-600">
-              Inventory values are units, not PV. Draft products are not listed for purchase.
+              Inventory values are in verified product units. Draft products are not listed for purchase.
             </p>
 
             <button

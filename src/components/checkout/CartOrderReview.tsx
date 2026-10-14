@@ -213,7 +213,7 @@ export const CartOrderReview: React.FC<CartOrderReviewProps> = ({
                 Qualification is conditional
               </h4>
               <p className="text-[11px] text-parchment-400 leading-relaxed font-light">
-                100 PV is a points measure, not a cash value. Commissions depend on complete, validated levels and product distribution. Earnings and placement are not guaranteed; there is no assured income.
+                Commissions depend on validated member referrals and product distribution. Earnings and placement are not guaranteed; there is no assured income.
               </p>
             </div>
 

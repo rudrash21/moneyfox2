@@ -79,9 +79,9 @@ export const Header: React.FC<HeaderProps> = ({ currentScreen, onNavigate, cartC
         {/* Primary Editorial Navigation */}
         <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8 text-[13px] xl:text-sm tracking-wider font-semibold uppercase text-parchment-300 shrink-0">
           <button
-            onClick={() => handleNavScreen('product-detail')}
+            onClick={() => handleNavScreen('products')}
             className={`hover:text-amberfox transition-colors py-1 cursor-pointer whitespace-nowrap ${
-              currentScreen === 'product-detail' ? 'text-amberfox font-bold' : ''
+              currentScreen === 'products' || currentScreen === 'product-detail' ? 'text-amberfox font-bold' : ''
             }`}
           >
             Products
@@ -164,9 +164,9 @@ export const Header: React.FC<HeaderProps> = ({ currentScreen, onNavigate, cartC
         <div className="lg:hidden bg-noir-950/98 border-t border-amberfox/20 px-4 py-5 shadow-2xl backdrop-blur-2xl">
           <div className="flex flex-col space-y-3 text-sm uppercase tracking-wider font-semibold text-parchment-300">
             <button
-              onClick={() => handleNavScreen('product-detail')}
+              onClick={() => handleNavScreen('products')}
               className={`text-left py-2 hover:text-amberfox border-b border-noir-850 whitespace-nowrap ${
-                currentScreen === 'product-detail' ? 'text-amberfox font-bold' : ''
+                currentScreen === 'products' || currentScreen === 'product-detail' ? 'text-amberfox font-bold' : ''
               }`}
             >
               Products

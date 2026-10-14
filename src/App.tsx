@@ -5,6 +5,7 @@ import { EditorialFooter } from './components/common/EditorialFooter';
 import { TaxInvoiceModal } from './components/common/TaxInvoiceModal';
 
 import { PublicStorefront } from './components/public/PublicStorefront';
+import { ProductsCatalogView } from './components/shop/ProductsCatalogView';
 import { ProductDetailView } from './components/shop/ProductDetailView';
 import { CartOrderReview } from './components/checkout/CartOrderReview';
 import { DeliveryAndSponsor } from './components/checkout/DeliveryAndSponsor';
@@ -161,7 +162,21 @@ export default function App() {
           <PublicStorefront
             onNavigate={handleNavigate}
             onSelectProductAndBuy={handleSelectProductAndBuy}
-            onViewProductDetail={handleViewProductDetail}
+            onViewProductDetail={(id) => {
+              setSelectedProductId(id);
+              handleNavigate('product-detail');
+            }}
+          />
+        )}
+
+        {currentScreen === 'products' && (
+          <ProductsCatalogView
+            onNavigate={handleNavigate}
+            onSelectProductAndBuy={handleSelectProductAndBuy}
+            onViewProductDetail={(id) => {
+              setSelectedProductId(id);
+              handleNavigate('product-detail');
+            }}
           />
         )}
 

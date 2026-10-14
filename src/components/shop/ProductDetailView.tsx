@@ -62,7 +62,14 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
               ATELIER
             </button>
             <span className="text-parchment-600">/</span>
-            <span className="text-parchment-400">LUXURY STREETWEAR COLLECTION</span>
+            <button
+              onClick={() => onNavigate('products')}
+              className="hover:underline text-amberfox font-semibold cursor-pointer"
+            >
+              PRODUCTS
+            </button>
+            <span className="text-parchment-600">/</span>
+            <span className="text-parchment-300 truncate max-w-[200px] sm:max-w-none">{product.name}</span>
           </div>
           <h1 className="font-serif text-2xl sm:text-4xl text-parchment-100 uppercase tracking-wider mt-2">
             {product.name}
@@ -75,13 +82,22 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
 
       {/* Main PDP Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <button
-          onClick={() => onNavigate('storefront')}
-          className="inline-flex items-center space-x-2 text-xs font-mono text-parchment-400 hover:text-amberfox mb-6 cursor-pointer transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>RETURN TO HOME STOREFRONT</span>
-        </button>
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={() => onNavigate('products')}
+            className="inline-flex items-center space-x-2 text-xs font-mono text-amberfox hover:underline cursor-pointer transition-colors font-bold"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>← RETURN TO ALL PRODUCTS</span>
+          </button>
+          <span className="text-parchment-600 font-mono text-xs">•</span>
+          <button
+            onClick={() => onNavigate('storefront')}
+            className="text-xs font-mono text-parchment-400 hover:text-amberfox cursor-pointer transition-colors"
+          >
+            HOME STOREFRONT
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Left Column: Big Multi-Angle Showcase */}
@@ -116,43 +132,8 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
             </div>
           </div>
 
-          {/* Right Column: Design Switcher, Details, Sizes & Checkout */}
+          {/* Right Column: Details, Sizes & Checkout */}
           <div className="lg:col-span-5 space-y-6">
-            {/* Design & Edition Switcher */}
-            <div className="space-y-3 bg-noir-900 border border-amberfox/25 rounded-2xl p-4 sm:p-5">
-              <label className="block text-[11px] uppercase tracking-luxury text-amberfox font-mono font-bold">
-                Select Streetwear Design ({INITIAL_PRODUCTS.length} Drops Available)
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {INITIAL_PRODUCTS.map((p) => {
-                  const isSelected = p.id === currentId;
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => handleSwitchProduct(p.id)}
-                      className={`p-2.5 text-left font-mono text-xs rounded-xl border transition-all cursor-pointer flex items-center space-x-3 ${
-                        isSelected
-                          ? 'border-amberfox bg-amberfox/15 ring-1 ring-amberfox text-parchment-100 font-semibold shadow-amber-glow'
-                          : 'bg-noir-950/80 border-amberfox/15 text-parchment-400 hover:border-amberfox/40 hover:text-parchment-200'
-                      }`}
-                    >
-                      <div className="w-12 h-12 bg-white rounded-lg p-0.5 shrink-0 overflow-hidden flex items-center justify-center border border-amberfox/30">
-                        <img src={p.angles?.front || p.image} alt={p.name} className="w-full h-full object-contain" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="block text-[9px] text-amberfox truncate font-bold">{p.editionTag}</span>
-                        <span className="block text-[11px] font-serif text-parchment-100 uppercase truncate font-bold">
-                          {p.name.replace('MoneyFox ', '')}
-                        </span>
-                        <span className="block text-[9px] text-parchment-500 truncate">{p.color}</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* Product Overview Card */}
             <div className="space-y-2">
               <div className="inline-flex items-center space-x-2 text-xs font-mono uppercase tracking-luxury text-amberfox">
@@ -179,7 +160,7 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
                 </span>
               </div>
               <span className="px-3 py-1 bg-amberfox/15 border border-amberfox text-amberfox font-mono text-xs font-bold rounded-lg uppercase">
-                100 PV Binary Node
+                Direct Selling Drop
               </span>
             </div>
 
@@ -286,7 +267,7 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
             All Qualifying Streetwear Drops
           </h2>
           <p className="text-xs sm:text-sm text-parchment-300 mt-3 font-light leading-relaxed">
-            Every garment purchase above <strong className="text-amberfox">₹2,000</strong> qualifies you with <strong className="text-amberfox">100 PV</strong> in the binary tree and activates commission eligibility. Click any edition below to inspect its 4 camera angles.
+            Every garment purchase above <strong className="text-amberfox">₹2,000</strong> qualifies you in the binary tree and activates commission eligibility. Click any edition below to inspect its 4 camera angles.
           </p>
         </div>
 
@@ -356,7 +337,7 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
                   {/* Features Chips */}
                   <div className="flex flex-wrap gap-1.5 pt-1 text-[10px] font-mono text-parchment-300">
                     <span className="px-2 py-0.5 bg-noir-950 border border-amberfox/15 rounded">
-                      ✓ 100 PV Binary Node
+                      ✓ Commission Qualified
                     </span>
                     <span className="px-2 py-0.5 bg-noir-950 border border-amberfox/15 rounded">
                       ✓ Free Express Shipping

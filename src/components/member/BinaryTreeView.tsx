@@ -9,7 +9,7 @@ export const BinaryTreeView: React.FC<BinaryTreeProps> = ({ onBackToPV }) => {
   const [placementNotice, setPlacementNotice] = useState<string | null>(null);
 
   const handlePlaceMember = (name: string, branch: 'Left' | 'Right') => {
-    setPlacementNotice(`${name} placed into ${branch} Child branch. 100 PV accredited.`);
+    setPlacementNotice(`${name} placed into ${branch} Child branch. Placement activated.`);
     setTimeout(() => setPlacementNotice(null), 4000);
   };
   return (
@@ -20,7 +20,7 @@ export const BinaryTreeView: React.FC<BinaryTreeProps> = ({ onBackToPV }) => {
           className="inline-flex items-center space-x-2 text-xs font-mono text-parchment-400 hover:text-amberfox mb-3 cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>BACK TO NETWORK PV</span>
+          <span>BACK TO REFERRALS &amp; TEAM</span>
         </button>
         <p className="text-xs font-mono uppercase tracking-luxury text-amberfox-gold">
           PRIVATE GUILD / VISUAL TOPOLOGY
@@ -39,7 +39,7 @@ export const BinaryTreeView: React.FC<BinaryTreeProps> = ({ onBackToPV }) => {
           <div className="flex items-center space-x-4">
             <span className="flex items-center gap-1.5 text-amberfox-gold">
               <span className="w-2.5 h-2.5 bg-amberfox rounded-full" />
-              <span>Paid &amp; Placed (100 PV)</span>
+              <span>Paid &amp; Placed</span>
             </span>
             <span className="flex items-center gap-1.5 text-parchment-400">
               <span className="w-2.5 h-2.5 border border-amberfox/40 rounded-full" />
@@ -60,8 +60,8 @@ export const BinaryTreeView: React.FC<BinaryTreeProps> = ({ onBackToPV }) => {
               <h4 className="font-serif text-sm font-semibold text-parchment-100 mt-1">Vikramaditya S.</h4>
               <p className="text-xs font-mono text-amberfox-gold mt-0.5">mf10492</p>
               <div className="mt-2 pt-2 border-t border-amberfox/20 flex justify-between text-[10px] font-mono text-parchment-400">
-                <span>L: 1,500 PV</span>
-                <span>R: 1,500 PV</span>
+                <span>L: 15 Members</span>
+                <span>R: 15 Members</span>
               </div>
             </div>
             {/* Trunk Line */}
@@ -78,7 +78,7 @@ export const BinaryTreeView: React.FC<BinaryTreeProps> = ({ onBackToPV }) => {
                 <h5 className="font-serif text-xs font-semibold text-parchment-100 mt-0.5">Priya V.</h5>
                 <p className="text-[11px] font-mono text-amberfox-gold">mf10510</p>
                 <div className="mt-1 pt-1 border-t border-amberfox/10 text-[10px] font-mono text-parchment-400">
-                  100 PV • Placed
+                  Active Member
                 </div>
               </div>
               <div className="w-0.5 h-6 bg-amberfox/30" />
@@ -102,7 +102,7 @@ export const BinaryTreeView: React.FC<BinaryTreeProps> = ({ onBackToPV }) => {
                 <h5 className="font-serif text-xs font-semibold text-parchment-100 mt-0.5">Amit K.</h5>
                 <p className="text-[11px] font-mono text-amberfox-gold">mf10511</p>
                 <div className="mt-1 pt-1 border-t border-amberfox/10 text-[10px] font-mono text-parchment-400">
-                  100 PV • Placed
+                  Active Member
                 </div>
               </div>
               <div className="w-0.5 h-6 bg-amberfox/30" />
@@ -153,7 +153,7 @@ export const BinaryTreeView: React.FC<BinaryTreeProps> = ({ onBackToPV }) => {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="font-semibold text-parchment-100">Vikram Mehta • mf10524</p>
-                  <span className="text-[10px] text-parchment-400">Paid • 100 PV accredited • Verified UPI</span>
+                  <span className="text-[10px] text-parchment-400">Paid • Order verified • Verified UPI</span>
                 </div>
                 <span className="text-amberfox-gold text-[10px] uppercase px-2 py-0.5 hairline-border border-amberfox/40 bg-amberfox/10">
                   Ready for Slot
@@ -198,7 +198,7 @@ export const BinaryTreeView: React.FC<BinaryTreeProps> = ({ onBackToPV }) => {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="font-semibold text-parchment-100">Sneha Roy • mf10525</p>
-                  <span className="text-[10px] text-parchment-400">Paid • 100 PV accredited • Verified UPI</span>
+                  <span className="text-[10px] text-parchment-400">Paid • Order verified • Verified UPI</span>
                 </div>
                 <span className="text-amberfox-gold text-[10px] uppercase px-2 py-0.5 hairline-border border-amberfox/40 bg-amberfox/10">
                   Ready for Slot
