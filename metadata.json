@@ -1,0 +1,6 @@
+{
+  "name": "MoneyFox — Luxury Heavyweight Apparel & Verified Rewards House",
+  "description": "MoneyFox luxury 240 GSM architectural apparel, peer store credit ledger, checkout flow, member terminal, and operations back office.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

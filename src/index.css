@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+@theme {
+  --color-noir-950: #050505;
+  --color-noir-900: #0A0806;
+  --color-noir-850: #0F0D0A;
+  --color-noir-800: #181410;
+  --color-noir-700: #262019;
+  --color-noir-600: #3D3428;
+
+  --color-amberfox: #F58A2E;
+  --color-amberfox-bright: #FFA043;
+  --color-amberfox-glow: rgba(245, 138, 46, 0.35);
+  --color-amberfox-gold: #FFD166;
+  --color-amberfox-soft: #FFE27A;
+
+  --color-parchment-50: #FBF9F5;
+  --color-parchment-100: #F2EDE4;
+  --color-parchment-200: #E5DDCF;
+  --color-parchment-400: #B8AD9C;
+  --color-parchment-600: #8C806F;
+
+  --font-serif: "Cinzel", "Playfair Display", Georgia, serif;
+  --font-sans: "Jost", "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --letter-spacing-luxury: 0.14em;
+  --letter-spacing-stat: 0.22em;
+}
+
+/* Atmospheric effects */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+
+.bg-radial-golden {
+  background: radial-gradient(circle at 50% 18%, rgba(245, 138, 46, 0.16) 0%, rgba(255, 209, 102, 0.05) 32%, transparent 70%);
+}
+
+.hairline-border {
+  border: 1px solid rgba(255, 209, 102, 0.18);
+}
+
+.hairline-border-b {
+  border-bottom: 1px solid rgba(255, 209, 102, 0.15);
+}
+
+.hairline-border-t {
+  border-top: 1px solid rgba(255, 209, 102, 0.15);
+}
+
+.hairline-border-r {
+  border-right: 1px solid rgba(255, 209, 102, 0.15);
+}
+
+.hairline-border-l {
+  border-left: 1px solid rgba(255, 209, 102, 0.15);
+}
+
+.gold-gradient-text {
+  background: linear-gradient(135deg, #FFF1BD 0%, #FFD166 45%, #F58A2E 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.btn-gold-sheen {
+  background: linear-gradient(135deg, #FFE27A 0%, #F58A2E 100%);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-gold-sheen:hover {
+  box-shadow: 0 0 25px rgba(245, 138, 46, 0.55);
+  filter: brightness(1.08);
+}
+
+.shadow-amber-glow {
+  box-shadow: 0 0 45px -10px rgba(245, 138, 46, 0.28);
+}
+
+/* Continuous Marquee */
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  display: flex;
+  flex-shrink: 0;
+  will-change: transform;
+  animation: marqueeScroll 35s linear infinite;
+}
+
+.animate-marquee:hover,
+.group:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+/* Custom scrollbar for noir aesthetic */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0A0806;
+}
+::-webkit-scrollbar-thumb {
+  background: #262019;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #F58A2E;
+}
