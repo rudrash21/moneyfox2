@@ -519,7 +519,7 @@ export const AdminTreeManagementView: React.FC = () => {
               <span className="text-parchment-200">{currentNode.rightPv}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-amberfox/10">
-              <span className="text-parchment-400">Parent Sponsor:</span>
+              <span className="text-parchment-400">Parent Referrer:</span>
               <span className="text-amberfox-gold">{currentNode.parentId || 'None (System Root)'}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-amberfox/10">

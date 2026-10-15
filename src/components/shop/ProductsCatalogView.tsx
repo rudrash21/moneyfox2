@@ -128,29 +128,21 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
   return (
     <div className="bg-noir-950 text-parchment-100 min-h-screen pb-24">
       {/* Top Header / Breadcrumbs Bar */}
-      <div className="border-b border-amberfox/15 bg-noir-900/80 backdrop-blur-md py-5 sm:py-6 sticky top-16 sm:top-20 z-30">
+      <div className="border-b border-amberfox/15 bg-noir-900/80 backdrop-blur-md py-3.5 sm:py-4 sticky top-16 sm:top-20 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              {/* Breadcrumbs */}
-              <div className="flex items-center space-x-2 text-[11px] font-mono tracking-luxury text-amberfox uppercase">
-                <button
-                  onClick={() => onNavigate('storefront')}
-                  className="hover:underline text-parchment-400 cursor-pointer"
-                >
-                  ATELIER
-                </button>
-                <span className="text-parchment-600">/</span>
-                <span className="text-parchment-400">LUXURY STREETWEAR</span>
-                <span className="text-parchment-600">/</span>
-                <span className="text-amberfox font-semibold">ALL PRODUCTS</span>
-              </div>
-              <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-parchment-100 uppercase tracking-wider mt-1.5 font-bold">
-                Streetwear Products Collection
-              </h1>
-              <p className="text-xs sm:text-sm text-parchment-400 font-mono mt-1">
-                240 GSM Heavyweight Combed Cotton • Official Atelier Streetwear Drops
-              </p>
+          <div className="flex items-center justify-between gap-4">
+            {/* Breadcrumbs */}
+            <div className="flex items-center space-x-2 text-[11px] font-mono tracking-luxury text-amberfox uppercase">
+              <button
+                onClick={() => onNavigate('storefront')}
+                className="hover:underline text-parchment-400 cursor-pointer"
+              >
+                HOME
+              </button>
+              <span className="text-parchment-600">/</span>
+              <span className="text-parchment-400">LUXURY STREETWEAR</span>
+              <span className="text-parchment-600">/</span>
+              <span className="text-amberfox font-semibold">ALL PRODUCTS</span>
             </div>
 
             {/* Quick Stats Banner */}
@@ -180,7 +172,7 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* ================= LEFT SIDEBAR (FILTERS - FLIPKART STYLE IN WEBSITE NOIR THEME) ================= */}
-          <aside className="hidden lg:block lg:col-span-3 space-y-6 sticky top-44">
+          <aside className="hidden lg:block lg:col-span-3 space-y-6 sticky top-36">
             <div className="bg-noir-900/95 border border-amberfox/25 rounded-2xl p-5 shadow-2xl backdrop-blur-xl">
               {/* Header */}
               <div className="flex items-center justify-between pb-4 border-b border-amberfox/15">
@@ -424,7 +416,7 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
                 <Sparkles className="w-10 h-10 text-amberfox/40 mx-auto" />
                 <h3 className="font-serif text-lg text-parchment-200 uppercase">No Matching Streetwear Drops Found</h3>
                 <p className="text-xs font-mono text-parchment-500 max-w-md mx-auto">
-                  Try clearing your filters or search criteria to see all official drops from the MoneyFox Atelier archive.
+                  Try clearing your filters or search criteria to see all official drops from the MoneyFox Products archive.
                 </p>
                 <button
                   onClick={handleClearFilters}
@@ -494,7 +486,7 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
                         <div>
                           {/* Brand label */}
                           <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-parchment-400">
-                            <span>MONEYFOX ATELIER</span>
+                            <span>MONEYFOX PRODUCTS</span>
                             <span className="text-amberfox-gold">QUALIFIED DROP</span>
                           </div>
 

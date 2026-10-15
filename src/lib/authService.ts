@@ -124,7 +124,7 @@ export const authService = {
         if (foundUser?.email) {
           targetEmail = foundUser.email;
         } else if (cleanIdentifier.toLowerCase() === 'admin' || cleanIdentifier.toLowerCase() === 'mf-ops-root') {
-          targetEmail = 'admin@moneyfox.luxury';
+          targetEmail = 'admin@moneyfox.co.in';
         } else if (cleanIdentifier.toLowerCase() === 'mf10492' || cleanIdentifier.toLowerCase() === 'test') {
           targetEmail = 'test_probe_user_99@gmail.com';
         }

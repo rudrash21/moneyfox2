@@ -26,7 +26,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const [signUpPassword, setSignUpPassword] = useState<string>('');
   const [signUpName, setSignUpName] = useState<string>('');
   const [signUpPhone, setSignUpPhone] = useState<string>('');
-  const [signUpReferral, setSignUpReferral] = useState<string>('00000');
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -67,7 +66,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
       password: signUpPassword,
       name: signUpName,
       phone: signUpPhone,
-      referralCode: signUpReferral,
     });
     setIsLoading(false);
 
@@ -267,35 +265,20 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[11px] font-mono uppercase tracking-luxury text-parchment-400 mb-1.5">
-                    Mobile Phone *
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="tel"
-                      value={signUpPhone}
-                      onChange={(e) => setSignUpPhone(e.target.value)}
-                      className="w-full bg-noir-950 hairline-border p-3 pl-10 text-xs font-mono text-parchment-100 focus:outline-none focus:border-amberfox"
-                      placeholder="9876543210"
-                      required
-                    />
-                    <Phone className="w-4 h-4 text-parchment-500 absolute left-3 top-3" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-mono uppercase tracking-luxury text-parchment-400 mb-1.5">
-                    Sponsor Referral Code
-                  </label>
+              <div>
+                <label className="block text-[11px] font-mono uppercase tracking-luxury text-parchment-400 mb-1.5">
+                  Mobile Phone *
+                </label>
+                <div className="relative">
                   <input
-                    type="text"
-                    value={signUpReferral}
-                    onChange={(e) => setSignUpReferral(e.target.value)}
-                    className="w-full bg-noir-950 hairline-border p-3 text-xs font-mono text-parchment-100 focus:outline-none focus:border-amberfox"
-                    placeholder="00000"
+                    type="tel"
+                    value={signUpPhone}
+                    onChange={(e) => setSignUpPhone(e.target.value)}
+                    className="w-full bg-noir-950 hairline-border p-3 pl-10 text-xs font-mono text-parchment-100 focus:outline-none focus:border-amberfox"
+                    placeholder="9876543210"
+                    required
                   />
+                  <Phone className="w-4 h-4 text-parchment-500 absolute left-3 top-3" />
                 </div>
               </div>
 
@@ -348,6 +331,17 @@ export const LoginView: React.FC<LoginViewProps> = ({
               className="text-amberfox-gold hover:underline font-semibold uppercase tracking-luxury cursor-pointer"
             >
               Order Drop &amp; Join Guild →
+            </button>
+          </div>
+
+          {/* Admin Terminal Link */}
+          <div className="pt-4 text-center">
+            <button
+              type="button"
+              onClick={() => onNavigate('admin-login')}
+              className="text-[10px] font-mono uppercase tracking-luxury text-parchment-500 hover:text-amberfox cursor-pointer transition-colors"
+            >
+              🔒 Operations &amp; Administrator Portal
             </button>
           </div>
         </div>

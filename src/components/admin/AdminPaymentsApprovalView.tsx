@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { addAuditLog } from '../../data/auditLogStore';
 import { dbService, DbPayment } from '../../lib/dbService';
+import { userTreeStore } from '../../data/userTreeStore';
 
 interface PaymentQueueItem {
   id: string;
@@ -72,25 +73,11 @@ export const AdminPaymentsApprovalView: React.FC<AdminPaymentsApprovalProps> = (
         });
         setPayments(mapped);
       } else {
-        // Fallback demo row if database is newly initialized
-        setPayments([
-          {
-            id: 'ORD-MFX-99412',
-            orderId: 'ORD-MFX-99412',
-            customerName: 'Vikramaditya S.',
-            memberId: 'MF8287277732BB',
-            amount: 2000,
-            utrNumber: '429910488219',
-            date: 'Today',
-            time: '14:28 IST',
-            product: 'Signature Heavyweight Tee Noir (L)',
-            status: 'Pending',
-            sponsorId: 'mf00000',
-          },
-        ]);
+        setPayments([]);
       }
     } catch (err) {
       console.error('Error in loadPaymentsFromSupabase:', err);
+      setPayments([]);
     } finally {
       setIsLoading(false);
     }
@@ -98,6 +85,12 @@ export const AdminPaymentsApprovalView: React.FC<AdminPaymentsApprovalProps> = (
 
   useEffect(() => {
     loadPaymentsFromSupabase();
+    const unsubscribe = dbService.subscribePayments(() => {
+      loadPaymentsFromSupabase();
+    });
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const filteredPayments = payments.filter((item) => {
@@ -121,13 +114,19 @@ export const AdminPaymentsApprovalView: React.FC<AdminPaymentsApprovalProps> = (
     setPayments((prev) =>
       prev.map((p) => (p.id === item.id ? { ...p, status: 'Approved' } : p))
     );
+
+    // If order is ₹2,000 or more, approve tree qualifying status in userTreeStore
+    if (item.amount >= 2000) {
+      userTreeStore.approveTreePayment(2);
+    }
+
     setActionNotice(
       `✓ APPROVED: Verified payment of ₹${item.amount} for ${item.memberId} (UTR: ${item.utrNumber}). Account activated and placed into Waiting Bench queue.`
     );
 
     // 3. Record immutable audit entry
     addAuditLog({
-      operatorId: 'admin@moneyfox.luxury',
+      operatorId: 'admin@moneyfox.co.in',
       operatorRole: 'Apex Admin',
       actionType: 'PAYMENT_APPROVAL',
       category: 'Financial',
@@ -164,7 +163,7 @@ export const AdminPaymentsApprovalView: React.FC<AdminPaymentsApprovalProps> = (
 
     // 3. Record immutable audit entry
     addAuditLog({
-      operatorId: 'admin@moneyfox.luxury',
+      operatorId: 'admin@moneyfox.co.in',
       operatorRole: 'Apex Admin',
       actionType: 'PAYMENT_REJECTION',
       category: 'Financial',
@@ -318,7 +317,7 @@ export const AdminPaymentsApprovalView: React.FC<AdminPaymentsApprovalProps> = (
               <tr className="text-[10px] uppercase tracking-luxury text-parchment-400">
                 <th className="py-3">Order / Customer</th>
                 <th className="py-3">12-Digit UTR Number</th>
-                <th className="py-3">Merchandise &amp; Sponsor</th>
+                <th className="py-3">Merchandise &amp; Referrer</th>
                 <th className="py-3">Amount</th>
                 <th className="py-3">Status</th>
                 <th className="py-3 text-right">Guarded Decision</th>
@@ -366,7 +365,7 @@ export const AdminPaymentsApprovalView: React.FC<AdminPaymentsApprovalProps> = (
 
                       <td className="py-4">
                         <p className="text-[11px] text-parchment-200">{payment.product}</p>
-                        <p className="text-[10px] text-parchment-400">Sponsor: {payment.sponsorId}</p>
+                        <p className="text-[10px] text-parchment-400">Referrer: {payment.sponsorId}</p>
                       </td>
 
                       <td className="py-4">

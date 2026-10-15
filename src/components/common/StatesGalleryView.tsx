@@ -16,10 +16,10 @@ export const StatesGalleryView: React.FC<StatesGalleryProps> = ({ onNavigate }) 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center space-x-2 text-[11px] font-mono tracking-luxury text-amberfox uppercase">
             <button
-              onClick={() => onNavigate('storefront')}
+              onClick={() => onNavigate('products')}
               className="hover:underline text-parchment-400 cursor-pointer"
             >
-              ATELIER
+              PRODUCTS
             </button>
             <span className="text-parchment-600">/</span>
             <span className="text-parchment-400">DESIGN SYSTEM STATES COMPOSITION</span>
@@ -107,16 +107,16 @@ export const StatesGalleryView: React.FC<StatesGalleryProps> = ({ onNavigate }) 
               {/* Tile 2 */}
               <div className="bg-noir-900 hairline-border p-6 space-y-3">
                 <span className="text-[10px] text-amberfox tracking-luxury uppercase block">
-                  SPONSOR / NO MATCH
+                  REFERRER / NO MATCH
                 </span>
-                <h4 className="font-serif text-lg uppercase text-parchment-100">Sponsor not found</h4>
+                <h4 className="font-serif text-lg uppercase text-parchment-100">Referrer not found</h4>
                 <input
                   type="text"
                   value="mf99999"
                   className="w-full bg-noir-950 hairline-border p-2 text-xs"
                   readOnly
                 />
-                <p className="text-[11px] text-parchment-400">We could not find an active sponsor with this ID.</p>
+                <p className="text-[11px] text-parchment-400">We could not find an active referrer with this code or ID.</p>
                 <div className="border-l-2 border-amberfox bg-noir-950 p-2.5 space-y-1">
                   <span className="text-amberfox text-[10px] font-bold block">Prefer to continue?</span>
                   <p className="text-[10px] text-parchment-400">

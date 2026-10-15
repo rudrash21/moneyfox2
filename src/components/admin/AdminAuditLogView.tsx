@@ -44,7 +44,7 @@ export const AdminAuditLogView: React.FC = () => {
   const [simTarget, setSimTarget] = useState<string>('Order ORD-MFX-99520 · Karan Malhotra (mf10520)');
   const [simDetails, setSimDetails] = useState<string>('Reconciled UPI UTR 429910556677 for ₹2,000. Activated account and issued statutory GST Tax Invoice.');
   const [simSeverity, setSimSeverity] = useState<AuditSeverity>('medium');
-  const [simOperator, setSimOperator] = useState<string>('admin@moneyfox.luxury');
+  const [simOperator, setSimOperator] = useState<string>('admin@moneyfox.co.in');
 
   useEffect(() => {
     const unsubscribe = subscribeAuditLogs((updatedLogs) => {
@@ -75,7 +75,7 @@ export const AdminAuditLogView: React.FC = () => {
       const orderNum = Math.floor(10000 + Math.random() * 90000);
       const utrNum = `429910${Math.floor(100000 + Math.random() * 900000)}`;
       addAuditLog({
-        operatorId: 'admin@moneyfox.luxury',
+        operatorId: 'admin@moneyfox.co.in',
         operatorRole: 'Apex Admin',
         actionType: 'PAYMENT_APPROVAL',
         category: 'Financial',
@@ -119,7 +119,7 @@ export const AdminAuditLogView: React.FC = () => {
       const batchId = `SYS-BATCH-MLM-L9-${Math.floor(100 + Math.random() * 900)}`;
       const credited = 4300;
       addAuditLog({
-        operatorId: 'admin@moneyfox.luxury',
+        operatorId: 'admin@moneyfox.co.in',
         operatorRole: 'Apex Admin',
         actionType: 'REWARD_CALCULATION',
         category: 'Compensation',
@@ -927,7 +927,7 @@ export const AdminAuditLogView: React.FC = () => {
                   onChange={(e) => setSimOperator(e.target.value)}
                   className="w-full bg-noir-950 hairline-border p-2 text-xs text-parchment-100 focus:outline-none focus:border-amberfox cursor-pointer"
                 >
-                  <option value="admin@moneyfox.luxury">Apex Admin</option>
+                  <option value="admin@moneyfox.co.in">Apex Admin</option>
                   <option value="compliance@moneyfox.luxury">Compliance Officer</option>
                   <option value="finance@moneyfox.luxury">Finance Desk</option>
                 </select>

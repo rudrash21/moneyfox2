@@ -21,10 +21,10 @@ export const PaymentVerificationPending: React.FC<PaymentVerificationPendingProp
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center space-x-2 text-[11px] font-mono tracking-luxury text-amberfox uppercase">
             <button
-              onClick={() => onNavigate('storefront')}
+              onClick={() => onNavigate('products')}
               className="hover:underline text-parchment-400 cursor-pointer"
             >
-              ATELIER
+              PRODUCTS
             </button>
             <span className="text-parchment-600">/</span>
             <span className="text-parchment-400">SHOPPING &amp; ACCOUNT ACCESS</span>
@@ -48,7 +48,7 @@ export const PaymentVerificationPending: React.FC<PaymentVerificationPendingProp
             </div>
             <div className="py-2 border-b-2 border-emerald-500/80 text-emerald-400 flex items-center space-x-2">
               <span>✓</span>
-              <span>Delivery &amp; sponsor</span>
+              <span>Delivery &amp; referrer</span>
             </div>
             <div className="py-2 border-b-2 border-emerald-500/80 text-emerald-400 flex items-center space-x-2">
               <span>✓</span>
@@ -221,7 +221,7 @@ export const PaymentVerificationPending: React.FC<PaymentVerificationPendingProp
               </div>
 
               <div className="pt-4 border-t border-amberfox/15 font-mono text-xs space-y-2">
-                <span className="text-[10px] uppercase text-amberfox tracking-luxury">SPONSOR PREFERENCE</span>
+                <span className="text-[10px] uppercase text-amberfox tracking-luxury">REFERRER PREFERENCE</span>
                 <p className="text-parchment-100 font-semibold">Rahul Sharma • mf10001</p>
                 <div className="inline-block bg-noir-950 hairline-border px-2.5 py-1 text-[10px] text-parchment-400">
                   Membership awaiting approval

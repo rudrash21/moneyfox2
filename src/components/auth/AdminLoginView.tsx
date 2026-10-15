@@ -25,7 +25,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({
   onNavigate,
   onAdminLoginSuccess,
 }) => {
-  const [operatorId, setOperatorId] = useState<string>('admin@moneyfox.luxury');
+  const [operatorId, setOperatorId] = useState<string>('admin@moneyfox.co.in');
   const [password, setPassword] = useState<string>('ApexMatrix#2025');
   const [totpCode, setTotpCode] = useState<string>('889214');
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -65,13 +65,13 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({
   };
 
   const handleQuickAutoFill = async () => {
-    setOperatorId('admin@moneyfox.luxury');
+    setOperatorId('admin@moneyfox.co.in');
     setPassword('ApexMatrix#2025');
     setTotpCode('889214');
     setHasError(false);
     setIsLoading(true);
 
-    const res = await authService.signIn('admin@moneyfox.luxury', 'ApexMatrix#2025');
+    const res = await authService.signIn('admin@moneyfox.co.in', 'ApexMatrix#2025');
     setIsLoading(false);
 
     if (res.success) {
@@ -170,7 +170,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-parchment-400 font-light leading-relaxed">
-              Click below to authenticate against live Supabase credentials (<code className="text-amberfox">admin@moneyfox.luxury</code>) and open the Operations Back-Office.
+              Click below to authenticate against live Supabase credentials (<code className="text-amberfox">admin@moneyfox.co.in</code>) and open the Operations Back-Office.
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
               <button
@@ -209,7 +209,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({
                     setHasError(false);
                   }}
                   className="w-full bg-noir-950 hairline-border p-3.5 pl-10 text-xs font-mono text-parchment-100 focus:outline-none focus:border-amberfox"
-                  placeholder="admin@moneyfox.luxury"
+                  placeholder="admin@moneyfox.co.in"
                   required
                 />
                 <User className="w-4 h-4 text-parchment-500 absolute left-3.5 top-3.5" />

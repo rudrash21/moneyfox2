@@ -19,7 +19,7 @@ export interface BinaryNodeData {
 }
 
 // Deterministically generate complete 9-level binary tree hierarchy (all 1,023 nodes)
-const buildFullNineLevelTree = (): BinaryNodeData => {
+export const buildFullNineLevelTree = (): BinaryNodeData => {
   const firstNames = [
     'Vikramaditya', 'Priya', 'Amit', 'Karan', 'Sneha', 'Rohit', 'Ananya',
     'Arjun', 'Meera', 'Dev', 'Riya', 'Kabir', 'Tanvi', 'Aditya', 'Pooja',
@@ -135,7 +135,7 @@ const buildFullNineLevelTree = (): BinaryNodeData => {
   return root;
 };
 
-const FULL_NINE_LEVEL_TREE = buildFullNineLevelTree();
+export const FULL_NINE_LEVEL_TREE = buildFullNineLevelTree();
 
 // Helper to extract all nodes at a given depth
 const getNodesAtDepth = (node: BinaryNodeData, targetDepth: number): BinaryNodeData[] => {
@@ -346,9 +346,27 @@ const TreeNodeRecursiveItem: React.FC<{
   );
 });
 
-export const NineLevelBinaryTree: React.FC = () => {
+export interface NineLevelBinaryTreeProps {
+  hideHeader?: boolean;
+  title?: string;
+  subtitle?: string;
+  categoryTag?: string;
+  isDashboard?: boolean;
+  customRootNode?: BinaryNodeData;
+}
+
+export const NineLevelBinaryTree: React.FC<NineLevelBinaryTreeProps> = ({
+  hideHeader = false,
+  title,
+  subtitle,
+  categoryTag,
+  isDashboard = false,
+  customRootNode,
+}) => {
   const [selectedDepth, setSelectedDepth] = useState<number>(9);
-  const [focusedNodePath, setFocusedNodePath] = useState<BinaryNodeData[]>([FULL_NINE_LEVEL_TREE]);
+  const [focusedNodePath, setFocusedNodePath] = useState<BinaryNodeData[]>([
+    customRootNode || FULL_NINE_LEVEL_TREE,
+  ]);
   const [zoomScale, setZoomScale] = useState<number>(DEFAULT_ZOOM_PER_LEVEL[9] || 0.1);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 40 });
   const [isDraggingState, setIsDraggingState] = useState<boolean>(false);
@@ -506,8 +524,16 @@ export const NineLevelBinaryTree: React.FC = () => {
     setZoomScale(targetScale);
   };
 
+  // When customRootNode changes (e.g. user toggles between Tree 1 and Tree 2)
+  useEffect(() => {
+    if (customRootNode) {
+      setFocusedNodePath([customRootNode]);
+      setTimeout(() => handleFitPage(), 60);
+    }
+  }, [customRootNode, handleFitPage]);
+
   const handleResetRoot = () => {
-    setFocusedNodePath([FULL_NINE_LEVEL_TREE]);
+    setFocusedNodePath([customRootNode || FULL_NINE_LEVEL_TREE]);
     setSelectedNodeModal(null);
     setTimeout(() => handleFitPage(), 50);
   };
@@ -574,18 +600,24 @@ export const NineLevelBinaryTree: React.FC = () => {
   return (
     <div className="bg-noir-900/95 border border-amberfox/30 rounded-2xl p-4 sm:p-8 shadow-2xl relative overflow-hidden space-y-6">
       {/* Title & Concept Header */}
-      <div className="text-center space-y-2">
-        <div className="inline-flex items-center space-x-2 text-amberfox font-mono text-xs uppercase tracking-luxury">
-          <GitBranch className="w-4 h-4 text-amberfox" />
-          <span>DUAL-BRANCH ARCHITECTURAL TOPOLOGY</span>
+      {!hideHeader && (
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center space-x-2 text-amberfox font-mono text-xs uppercase tracking-luxury">
+            <GitBranch className="w-4 h-4 text-amberfox" />
+            <span>{categoryTag || 'DUAL-BRANCH ARCHITECTURAL TOPOLOGY'}</span>
+          </div>
+          <h3 className="font-serif text-2xl sm:text-3xl font-bold text-parchment-100 uppercase tracking-wider">
+            {title || 'How the Binary Tree Works'}
+          </h3>
+          <p className="text-xs sm:text-sm text-parchment-400 max-w-2xl mx-auto font-light leading-relaxed">
+            {subtitle || (
+              <>
+                Complete 9-level binary network topology. Click any tier from <strong>L1 to L9</strong> below to inspect that level&apos;s complete tree structure with precision orthogonal connectors.
+              </>
+            )}
+          </p>
         </div>
-        <h3 className="font-serif text-2xl sm:text-3xl font-bold text-parchment-100 uppercase tracking-wider">
-          How the Binary Tree Works
-        </h3>
-        <p className="text-xs sm:text-sm text-parchment-400 max-w-2xl mx-auto font-light leading-relaxed">
-          Complete 9-level binary network topology. Click any tier from <strong>L1 to L9</strong> below to inspect that level&apos;s complete tree structure with precision orthogonal connectors.
-        </p>
-      </div>
+      )}
 
       {/* Main Control Console matching user reference image */}
       <div className="bg-noir-950 p-4 sm:p-5 border border-amberfox/25 rounded-xl space-y-4">
@@ -792,7 +824,7 @@ export const NineLevelBinaryTree: React.FC = () => {
             <div className="bg-noir-900 border border-amberfox/20 p-3.5 rounded-lg space-y-2 text-xs">
               {selectedNodeModal.parentName && (
                 <div className="flex justify-between text-parchment-300">
-                  <span>Direct Sponsor:</span>
+                  <span>Direct Referrer:</span>
                   <span className="text-parchment-100 font-medium">
                     {selectedNodeModal.parentName} ({selectedNodeModal.parentCode})
                   </span>

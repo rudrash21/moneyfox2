@@ -4,6 +4,7 @@ export type ScreenView =
   | 'product-detail'
   | 'cart-review'
   | 'delivery-sponsor'
+  | 'delivery-referrer'
   | 'upi-payment'
   | 'verification-pending'
   | 'approved-guild'
@@ -21,7 +22,6 @@ export type MemberTab =
   | 'order-detail'
   | 'network-pv'
   | 'binary-tree'
-  | 'calculator'
   | 'payouts'
   | 'account-security'
   | 'support-returns';
@@ -135,12 +135,16 @@ export interface DeliveryAddress {
   isBillingSame: boolean;
 }
 
-export interface SponsorInfo {
+export interface ReferrerInfo {
   sponsorId: string;
   sponsorName: string;
   isValid: boolean;
   joinBenchInstead: boolean;
+  referrerId?: string;
+  referrerName?: string;
 }
+
+export type SponsorInfo = ReferrerInfo;
 
 export interface OrderRecord {
   orderId: string;

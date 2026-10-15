@@ -134,17 +134,19 @@ export const Header: React.FC<HeaderProps> = ({ currentScreen, onNavigate, cartC
             className="relative p-1.5 sm:p-2 text-parchment-200 hover:text-amberfox transition-colors flex items-center cursor-pointer shrink-0"
           >
             <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-parchment-200 hover:text-amberfox transition-colors" />
-            <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold leading-none text-noir-950 bg-amberfox rounded-full font-mono">
-              {cartCount}
-            </span>
+            {cartCount > 0 && (
+              <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold leading-none text-noir-950 bg-amberfox rounded-full font-mono">
+                {cartCount}
+              </span>
+            )}
           </button>
 
           {/* Premium CTA Button */}
           <button
-            onClick={() => handleNavScreen('product-detail')}
+            onClick={() => handleNavScreen('products')}
             className="hidden sm:inline-flex btn-gold-sheen text-noir-950 text-xs font-bold uppercase tracking-luxury px-3 sm:px-4 py-2 sm:py-2.5 rounded-none border border-amberfox/40 items-center shadow-amber-glow cursor-pointer whitespace-nowrap shrink-0"
           >
-            <span className="whitespace-nowrap">Acquire Tee</span>
+            <span className="whitespace-nowrap">View Products</span>
             <ChevronRight className="w-3.5 h-3.5 ml-1 shrink-0" />
           </button>
 

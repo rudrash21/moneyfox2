@@ -37,7 +37,7 @@ export const DeliveryAndSponsor: React.FC<DeliveryAndSponsorProps> = ({
 
   const handleVerifySponsor = () => {
     if (!sponsorId.trim()) {
-      setSponsorError('Please enter a sponsor ID.');
+      setSponsorError('Please enter a referrer ID or referral code.');
       setIsSponsorVerified(false);
       return;
     }
@@ -47,7 +47,7 @@ export const DeliveryAndSponsor: React.FC<DeliveryAndSponsorProps> = ({
       setJoinWaitingBench(false);
     } else {
       setIsSponsorVerified(false);
-      setSponsorError('We could not find an active sponsor with this ID. Choose the waiting bench instead.');
+      setSponsorError('We could not find an active referrer with this code or ID. Choose the waiting bench instead.');
     }
   };
 
@@ -79,10 +79,10 @@ export const DeliveryAndSponsor: React.FC<DeliveryAndSponsorProps> = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center space-x-2 text-[11px] font-mono tracking-luxury text-amberfox uppercase">
             <button
-              onClick={() => onNavigate('storefront')}
+              onClick={() => onNavigate('products')}
               className="hover:underline text-parchment-400 cursor-pointer"
             >
-              ATELIER
+              PRODUCTS
             </button>
             <span className="text-parchment-600">/</span>
             <span className="text-parchment-400">SHOPPING &amp; ACCOUNT ACCESS</span>
@@ -106,7 +106,7 @@ export const DeliveryAndSponsor: React.FC<DeliveryAndSponsorProps> = ({
             </div>
             <div className="py-2 border-b-2 border-amberfox text-amberfox-gold flex items-center space-x-2">
               <span className="font-bold">02</span>
-              <span>Delivery &amp; sponsor</span>
+              <span>Delivery &amp; referrer</span>
             </div>
             <div className="py-2 border-b-2 border-transparent text-parchment-600 flex items-center space-x-2">
               <span>03</span>
@@ -124,7 +124,7 @@ export const DeliveryAndSponsor: React.FC<DeliveryAndSponsorProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-            {/* Left Column: Consignee & Sponsor Preferences */}
+            {/* Left Column: Consignee & Referrer Preferences */}
             <div className="lg:col-span-8 space-y-8">
               {/* Consignee Section */}
               <div className="bg-noir-900 hairline-border p-6 sm:p-8 space-y-6">
@@ -281,20 +281,20 @@ export const DeliveryAndSponsor: React.FC<DeliveryAndSponsorProps> = ({
                 </div>
               </div>
 
-              {/* Sponsor Association Section */}
+              {/* Referrer Association Section */}
               <div className="bg-noir-900 hairline-border p-6 sm:p-8 space-y-6">
                 <div>
                   <span className="font-mono text-[10px] uppercase tracking-luxury text-amberfox-gold block mb-1">
                     02 // MEMBERSHIP ASSOCIATION
                   </span>
                   <h2 className="font-serif text-2xl uppercase tracking-wider text-parchment-100">
-                    Sponsor preference
+                    Referrer preference
                   </h2>
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-mono uppercase tracking-luxury text-parchment-400 mb-1.5">
-                    Sponsor ID
+                    Referral Code / Referrer ID
                   </label>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <input
@@ -308,7 +308,7 @@ export const DeliveryAndSponsor: React.FC<DeliveryAndSponsorProps> = ({
                       className={`flex-1 bg-noir-950 hairline-border p-3 text-xs font-mono text-parchment-100 focus:outline-none focus:border-amberfox ${
                         joinWaitingBench ? 'opacity-40 cursor-not-allowed' : ''
                       }`}
-                      placeholder="e.g. mf10001"
+                      placeholder="Enter referral code or referrer ID (e.g. mf10001)"
                     />
                     <button
                       type="button"
@@ -316,7 +316,7 @@ export const DeliveryAndSponsor: React.FC<DeliveryAndSponsorProps> = ({
                       onClick={handleVerifySponsor}
                       className="hairline-border px-5 py-3 text-xs font-mono uppercase tracking-wider hover:border-amberfox hover:text-amberfox text-parchment-200 cursor-pointer disabled:opacity-40"
                     >
-                      VERIFY SPONSOR
+                      VERIFY REFERRER
                     </button>
                   </div>
 
@@ -325,10 +325,10 @@ export const DeliveryAndSponsor: React.FC<DeliveryAndSponsorProps> = ({
                     <div className="mt-4 p-4 bg-noir-950 hairline-border border-emerald-500/30 text-xs font-mono space-y-1">
                       <div className="text-emerald-400 font-semibold flex items-center gap-1.5">
                         <CheckCircle2 className="w-4 h-4" />
-                        <span>Sponsor verified • Rahul Sharma</span>
+                        <span>Referrer verified • Rahul Sharma</span>
                       </div>
                       <p className="text-[11px] text-parchment-400 font-light">
-                        {sponsorId} • Active member. This identifies your sponsor; it does not confirm a placement.
+                        {sponsorId} • Active member. This identifies your referrer; it does not confirm a placement.
                       </p>
                     </div>
                   )}
@@ -337,7 +337,7 @@ export const DeliveryAndSponsor: React.FC<DeliveryAndSponsorProps> = ({
                     <div className="mt-4 p-4 bg-noir-950 hairline-border border-amberfox/40 text-xs font-mono space-y-2">
                       <div className="text-amberfox font-semibold flex items-center gap-1.5">
                         <AlertCircle className="w-4 h-4" />
-                        <span>Sponsor not found</span>
+                        <span>Referrer not found</span>
                       </div>
                       <p className="text-[11px] text-parchment-400 font-light">{sponsorError}</p>
                       <button
@@ -371,7 +371,7 @@ export const DeliveryAndSponsor: React.FC<DeliveryAndSponsorProps> = ({
                     <div>
                       <span className="font-semibold text-parchment-100">Join the waiting bench instead</span>
                       <p className="text-[11px] text-parchment-400 font-light mt-0.5">
-                        No sponsor? Continue with a bench preference. Assignment depends on review and open slots; placement is not guaranteed.
+                        No referrer? Continue with a bench preference. Assignment depends on review and open slots; placement is not guaranteed.
                       </p>
                     </div>
                   </label>

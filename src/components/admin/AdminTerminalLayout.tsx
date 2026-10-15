@@ -81,7 +81,7 @@ export const AdminTerminalLayout: React.FC<AdminTerminalLayoutProps> = ({
           </button>
           <span className="text-amberfox/40">|</span>
           <span className="uppercase tracking-luxury text-parchment-400">
-            Search MoneyFox ID, Name, UTR, Sponsor...
+            Search MoneyFox ID, Name, UTR, Referrer...
           </span>
         </div>
 

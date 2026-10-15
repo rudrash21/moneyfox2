@@ -59,7 +59,7 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
               onClick={() => onNavigate('storefront')}
               className="hover:underline text-parchment-400 cursor-pointer"
             >
-              ATELIER
+              HOME
             </button>
             <span className="text-parchment-600">/</span>
             <button
@@ -261,7 +261,7 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center space-x-2 text-amberfox font-mono text-xs uppercase tracking-luxury mb-3 px-3 py-1 bg-amberfox/10 border border-amberfox/30 rounded-full">
             <Sparkles className="w-3.5 h-3.5 text-amberfox" />
-            <span>THE OFFICIAL ATELIER COLLECTION • 240 GSM HEAVYWEIGHT</span>
+            <span>THE OFFICIAL PRODUCTS COLLECTION • 240 GSM HEAVYWEIGHT</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-serif uppercase tracking-wider text-parchment-100 font-bold">
             All Qualifying Streetwear Drops

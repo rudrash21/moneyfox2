@@ -26,27 +26,18 @@ export const AdminMemberManagementView: React.FC = () => {
           name: u.name || (u.role === 'admin' ? 'Apex Admin' : 'Registered Member'),
           id: u.moneyfox_id || u.referral_code,
           email: u.email,
-          sponsor: u.referred_by ? `Sponsor: ${u.referred_by}` : 'System Root (mf00000)',
+          sponsor: u.referred_by ? `Referrer: ${u.referred_by}` : 'System Root (mf00000)',
           payment: u.payment_completed ? 'Approved' : 'Pending',
           placement: u.has_joined_tree ? 'Placed' : u.is_in_waiting_bench ? 'Waiting bench' : 'Awaiting placement',
           account: u.payment_completed ? 'Active' : 'Pending activation',
         }));
         setMembersList(mapped);
       } else {
-        setMembersList([
-          {
-            name: 'Vikramaditya S.',
-            id: 'MF8287277732BB',
-            email: 'test_probe_user_99@gmail.com',
-            sponsor: 'System Root • mf00000',
-            payment: 'Approved',
-            placement: 'Awaiting placement',
-            account: 'Active',
-          },
-        ]);
+        setMembersList([]);
       }
     } catch (err) {
       console.error('Error fetching members:', err);
+      setMembersList([]);
     } finally {
       setIsLoading(false);
     }
@@ -54,6 +45,12 @@ export const AdminMemberManagementView: React.FC = () => {
 
   useEffect(() => {
     loadMembersFromSupabase();
+    const unsubscribe = dbService.subscribeUsers(() => {
+      loadMembersFromSupabase();
+    });
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const handleConfirmSuspension = () => {
@@ -65,7 +62,7 @@ export const AdminMemberManagementView: React.FC = () => {
     setActionAlert('Suspension applied. Event committed to System Audit Log.');
 
     addAuditLog({
-      operatorId: 'admin@moneyfox.luxury',
+      operatorId: 'admin@moneyfox.co.in',
       operatorRole: 'Apex Admin',
       actionType: 'USER_SUSPENSION',
       category: 'Security & Users',
@@ -92,7 +89,7 @@ export const AdminMemberManagementView: React.FC = () => {
     setActionAlert('Active status restored. Event committed to System Audit Log.');
 
     addAuditLog({
-      operatorId: 'admin@moneyfox.luxury',
+      operatorId: 'admin@moneyfox.co.in',
       operatorRole: 'Apex Admin',
       actionType: 'USER_ACTIVATION',
       category: 'Security & Users',
@@ -278,7 +275,7 @@ export const AdminMemberManagementView: React.FC = () => {
               <tr className="text-[10px] uppercase tracking-luxury text-parchment-400">
                 <th className="py-2.5">Member</th>
                 <th className="py-2.5">Email / Identifier</th>
-                <th className="py-2.5">Sponsor</th>
+                <th className="py-2.5">Referrer</th>
                 <th className="py-2.5">Payment</th>
                 <th className="py-2.5">Placement</th>
                 <th className="py-2.5 text-right">Account</th>

@@ -4,7 +4,7 @@ import { BRAND_ASSETS } from '../../data/mockData';
 import { OrderRecord } from '../../types';
 
 interface OrderDetailTrackingProps {
-  order: OrderRecord;
+  order?: OrderRecord | null;
   onBackToOrders: () => void;
   onOpenInvoice: () => void;
   onOpenConcierge: () => void;
@@ -16,13 +16,32 @@ export const OrderDetailTrackingView: React.FC<OrderDetailTrackingProps> = ({
   onOpenInvoice,
   onOpenConcierge,
 }) => {
+  if (!order) {
+    return (
+      <div className="space-y-6 py-12 text-center font-mono">
+        <p className="text-sm text-parchment-200 uppercase tracking-widest font-semibold">
+          No Consignment Selected
+        </p>
+        <p className="text-xs text-parchment-400">
+          Please select an order from your order tracking or shop ledger to inspect consignment milestones.
+        </p>
+        <button
+          onClick={onBackToOrders}
+          className="btn-gold-sheen text-noir-950 font-bold uppercase tracking-wider text-xs px-5 py-2.5 cursor-pointer shadow-amber-glow"
+        >
+          Return to Orders →
+        </button>
+      </div>
+    );
+  }
+
   const steps = [
-    { title: 'Payment approved', desc: '24 Oct 2025 • Manual verification completed', status: 'completed' },
-    { title: 'Preparing your garment', desc: 'Packing and fulfilment preparation completed', status: 'completed' },
-    { title: 'Dispatched', desc: 'BlueDart Apex Secure Air • Courier handoff', status: 'completed' },
-    { title: 'In transit', desc: 'Current shipment stage • Carrier update awaited', status: 'current' },
-    { title: 'Out for delivery', desc: 'Awaiting carrier confirmation', status: 'pending' },
-    { title: 'Delivered', desc: 'Not yet delivered • Confirmation pending', status: 'pending' },
+    { title: 'Payment approved', desc: `${order.date} • Verification completed`, status: 'completed' },
+    { title: 'Preparing your garment', desc: 'Packing and luxury fulfilment preparation', status: 'completed' },
+    { title: 'Dispatched', desc: `${order.carrier || 'BlueDart Apex Secure Air'} • Courier handoff`, status: order.shipmentStatus !== 'Preparing' && order.shipmentStatus !== 'Verification pending' ? 'completed' : 'current' },
+    { title: 'In transit', desc: 'Shipment in express transit to destination hub', status: order.shipmentStatus === 'In transit' || order.shipmentStatus === 'Delivered' ? 'completed' : 'pending' },
+    { title: 'Out for delivery', desc: 'Courier agent out for delivery at destination', status: order.shipmentStatus === 'Delivered' ? 'completed' : 'pending' },
+    { title: 'Delivered', desc: 'Consignee received sealed package', status: order.shipmentStatus === 'Delivered' ? 'completed' : 'pending' },
   ];
 
   return (
@@ -40,10 +59,10 @@ export const OrderDetailTrackingView: React.FC<OrderDetailTrackingProps> = ({
           PRIVATE GUILD / MEMBER EXPERIENCE
         </p>
         <h1 className="font-serif text-3xl sm:text-4xl text-parchment-100 uppercase tracking-wider mt-1">
-          Your Noir edition, en route.
+          Your edition, en route.
         </h1>
         <p className="text-xs text-parchment-400 font-mono mt-1">
-          {order.orderId} / {order.date} / Vikramaditya S. • mf10492
+          {order.orderId} / {order.date} / Tracking: {order.trackingNumber || 'BD-EXPRESS'}
         </p>
       </div>
 

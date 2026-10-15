@@ -25,10 +25,10 @@ export const PasswordRecoveryFlow: React.FC<PasswordRecoveryProps> = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center space-x-2 text-[11px] font-mono tracking-luxury text-amberfox uppercase">
             <button
-              onClick={() => onNavigate('storefront')}
+              onClick={() => onNavigate('products')}
               className="hover:underline text-parchment-400 cursor-pointer"
             >
-              ATELIER
+              PRODUCTS
             </button>
             <span className="text-parchment-600">/</span>
             <span className="text-parchment-400">SHOPPING &amp; ACCOUNT ACCESS</span>

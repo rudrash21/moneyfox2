@@ -210,7 +210,7 @@ export const CURRENT_USER = {
   sponsor: {
     name: 'Rahul Sharma',
     id: 'mf10001',
-    status: 'Verified sponsor',
+    status: 'Verified referrer',
   },
   deliveryAddress: {
     fullName: 'Vikramaditya S.',

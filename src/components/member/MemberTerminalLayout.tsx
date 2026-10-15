@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   GitBranch,
-  Calculator,
   Share2,
   Wallet,
   ShoppingBag,
@@ -14,14 +13,15 @@ import {
   Truck,
   ShieldCheck,
 } from 'lucide-react';
-import { BRAND_ASSETS, CURRENT_USER, INITIAL_ORDERS } from '../../data/mockData';
+import { BRAND_ASSETS, CURRENT_USER } from '../../data/mockData';
 import { MemberTab, ScreenView, OrderRecord, UserProfile } from '../../types';
+import { dbService } from '../../lib/dbService';
+import { MemberOverviewView } from './MemberOverviewView';
 import { ShopOrdersView } from './ShopOrdersView';
 import { OrderTrackingDashboardView } from './OrderTrackingDashboardView';
 import { OrderDetailTrackingView } from './OrderDetailTrackingView';
 import { NetworkPVView } from './NetworkPVView';
 import { BinaryTreeView } from './BinaryTreeView';
-import { RewardsCalculatorView } from './RewardsCalculatorView';
 import { PayoutsEscrowView } from './PayoutsEscrowView';
 import { AccountSecurityView } from './AccountSecurityView';
 import { SupportReturnsView } from './SupportReturnsView';
@@ -40,7 +40,24 @@ export const MemberTerminalLayout: React.FC<MemberTerminalLayoutProps> = ({
   onSignOut,
 }) => {
   const [activeTab, setActiveTab] = useState<MemberTab>('order-tracking');
-  const [selectedOrder, setSelectedOrder] = useState<OrderRecord>(INITIAL_ORDERS[0]);
+  const [selectedOrder, setSelectedOrder] = useState<OrderRecord | null>(null);
+  const [orderCount, setOrderCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchRealOrders = async () => {
+      const orders = await dbService.fetchOrders();
+      setOrderCount(orders.length);
+      if (orders.length > 0) {
+        setSelectedOrder((prev) => prev || orders[0]);
+      }
+    };
+    fetchRealOrders();
+
+    const unsub = dbService.subscribeOrders(() => {
+      fetchRealOrders();
+    });
+    return () => unsub();
+  }, []);
 
   const memberName = currentUser?.fullName || CURRENT_USER.name;
   const memberId = currentUser?.moneyfoxId || 'mf10492';
@@ -51,11 +68,10 @@ export const MemberTerminalLayout: React.FC<MemberTerminalLayoutProps> = ({
       id: 'order-tracking',
       label: 'Order Tracking',
       icon: <Truck className="w-4 h-4" />,
-      badge: `${INITIAL_ORDERS.length} Active`,
+      badge: `${orderCount} Active`,
     },
     { id: 'shop-orders', label: 'Shop Orders', icon: <ShoppingBag className="w-4 h-4" /> },
     { id: 'binary-tree', label: 'Binary Tree', icon: <GitBranch className="w-4 h-4" /> },
-    { id: 'calculator', label: 'Calculator', icon: <Calculator className="w-4 h-4" /> },
     { id: 'network-pv', label: 'Referrals & Team', icon: <Share2 className="w-4 h-4" /> },
     { id: 'payouts', label: 'Payouts', icon: <Wallet className="w-4 h-4" /> },
     { id: 'account-security', label: 'Account & security', icon: <Shield className="w-4 h-4" /> },
@@ -191,12 +207,16 @@ export const MemberTerminalLayout: React.FC<MemberTerminalLayoutProps> = ({
             <BinaryTreeView onBackToPV={() => setActiveTab('network-pv')} />
           )}
 
-          {activeTab === 'calculator' && (
-            <RewardsCalculatorView onNavigateToPV={() => setActiveTab('network-pv')} />
-          )}
-
           {activeTab === 'overview' && (
-            <RewardsCalculatorView onNavigateToPV={() => setActiveTab('network-pv')} />
+            <MemberOverviewView
+              currentUser={currentUser}
+              onNavigateTab={(tab) => setActiveTab(tab)}
+              onSelectOrder={(ord) => {
+                setSelectedOrder(ord);
+                setActiveTab('order-detail');
+              }}
+              onReturnToShop={() => onNavigate('storefront')}
+            />
           )}
 
           {activeTab === 'payouts' && <PayoutsEscrowView />}

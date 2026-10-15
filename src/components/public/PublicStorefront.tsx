@@ -3,6 +3,7 @@ import { ChevronRight, ArrowRight, ShieldCheck, Truck, Receipt, CreditCard, User
 import { BRAND_ASSETS, NINE_LEVEL_SCHEDULE, INITIAL_PRODUCTS } from '../../data/mockData';
 import { ScreenView } from '../../types';
 import { NineLevelBinaryTree } from './NineLevelBinaryTree';
+import { GoldenWaveVisualizer } from './GoldenWaveVisualizer';
 
 interface StorefrontProps {
   onNavigate: (screen: ScreenView) => void;
@@ -73,20 +74,28 @@ export const PublicStorefront: React.FC<StorefrontProps> = ({
 
   return (
     <div className="bg-noir-950 text-parchment-100">
-      {/* BEGIN: Hero Section */}
-      <section className="relative pt-12 pb-24 lg:pt-20 lg:pb-32 overflow-hidden bg-radial-golden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* BEGIN: Hero Section with Dynamic Golden Wave Visualizer */}
+      <section className="relative pt-12 pb-24 lg:pt-20 lg:pb-32 overflow-hidden bg-radial-golden min-h-[580px] flex items-center">
+        {/* Animated Golden Wave Visualizer Backdrop */}
+        <div className="absolute inset-0 z-0">
+          <GoldenWaveVisualizer className="w-full h-full opacity-100" showControls={true} />
+        </div>
+
+        {/* Ambient Subtle Vignette for text depth */}
+        <div className="absolute inset-0 bg-radial-gradient pointer-events-none z-[1]" />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
 
           {/* Main Headline & Subheading */}
           <div className="text-center max-w-4xl mx-auto mb-14">
             <p className="text-amberfox uppercase font-medium tracking-[0.25em] text-xs sm:text-sm mb-3">
               WEAR IT. SHARE IT. GROW IT.
             </p>
-            <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-semibold tracking-[0.08em] leading-tight sm:leading-none text-parchment-100 uppercase mb-6">
+            <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-semibold tracking-[0.08em] leading-tight sm:leading-none text-parchment-100 uppercase mb-6 drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]">
               Be Cunning <br className="hidden sm:block" />
               <span className="gold-gradient-text font-bold">Like A Fox.</span>
             </h1>
-            <p className="text-sm sm:text-base text-parchment-400 max-w-2xl mx-auto font-light leading-relaxed tracking-wide">
+            <p className="text-sm sm:text-base text-parchment-300 max-w-2xl mx-auto font-light leading-relaxed tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]">
               We are Money Fox — a lifestyle brand offering premium branded products through direct selling. Enhance your style while building a thriving business opportunity by purchasing our products above{' '}
               <span className="text-amberfox-gold font-medium">₹2,000</span>
             </p>

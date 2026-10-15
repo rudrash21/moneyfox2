@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Check, Key, Smartphone, AlertCircle } from 'lucide-react';
 import { CURRENT_USER } from '../../data/mockData';
 
 export const AccountSecurityView: React.FC = () => {
@@ -257,75 +256,6 @@ export const AccountSecurityView: React.FC = () => {
                 UPDATE PASSWORD
               </button>
             </div>
-          </div>
-
-          {/* Two Factor Security */}
-          <div className="bg-noir-900 hairline-border p-6 sm:p-8 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-serif text-xl uppercase tracking-wider text-parchment-100">
-                Two factor security
-              </h3>
-              <span className="bg-noir-950 font-mono text-[10px] uppercase tracking-luxury px-2 py-0.5 hairline-border text-parchment-400">
-                Not configured
-              </span>
-            </div>
-
-            <p className="text-xs text-parchment-300 font-light leading-relaxed">
-              Add an authenticator as a second step when signing in. Recovery codes would be shown during setup, never in your profile.
-            </p>
-
-            <button
-              type="button"
-              className="hairline-border px-5 py-2.5 text-xs font-mono uppercase tracking-wider text-parchment-200 hover:border-amberfox cursor-pointer"
-            >
-              SET UP TWO-FACTOR
-            </button>
-
-            <div className="border-l-2 border-amberfox bg-noir-950 p-3 font-mono text-xs space-y-1">
-              <span className="text-amberfox font-semibold uppercase tracking-luxury text-[10px] block">
-                Security preview
-              </span>
-              <p className="text-[10px] text-parchment-400 font-light leading-relaxed">
-                These controls represent the intended account experience. Authentication, password changes and two-factor security are functional in this preview.
-              </p>
-            </div>
-          </div>
-
-          {/* Sessions */}
-          <div className="bg-noir-900 hairline-border p-6 sm:p-8 space-y-4 font-mono text-xs">
-            <h3 className="font-serif text-xl uppercase tracking-wider text-parchment-100">
-              Sessions
-            </h3>
-
-            <div className="divide-y divide-amberfox/15 text-[11px]">
-              <div className="py-2.5 flex justify-between items-center">
-                <div>
-                  <span className="text-parchment-100 font-semibold block">Chrome • Desktop</span>
-                  <span className="text-[10px] text-parchment-400">Current session</span>
-                </div>
-                <span className="text-amberfox-gold">This device</span>
-              </div>
-              <div className="py-2.5 flex justify-between items-center">
-                <div>
-                  <span className="text-parchment-100 font-semibold block">Safari • Desktop</span>
-                  <span className="text-[10px] text-parchment-400">23 Oct 2025</span>
-                </div>
-                <button type="button" className="text-parchment-400 hover:text-red-400 cursor-pointer">
-                  Sign out
-                </button>
-              </div>
-            </div>
-
-            <p className="text-[10px] text-parchment-600">
-              Sample session display • No IP addresses or access tokens shown.
-            </p>
-
-            <button
-              type="button"
-              className="hairline-border px-4 py-2 text-xs font-mono uppercase tracking-wider text-parchment-200 hover:border-amberfox cursor-pointer w-full text-center"
-            >
-              SIGN OUT OTHER SESSIONS
-            </button>
           </div>
         </div>
       </div>

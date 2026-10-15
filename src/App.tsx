@@ -21,17 +21,17 @@ import { MemberTerminalLayout } from './components/member/MemberTerminalLayout';
 import { AdminTerminalLayout } from './components/admin/AdminTerminalLayout';
 import { StatesGalleryView } from './components/common/StatesGalleryView';
 
-import { CURRENT_USER, INITIAL_ORDERS } from './data/mockData';
+import { CURRENT_USER } from './data/mockData';
 import { authService } from './lib/authService';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenView>('storefront');
-  const [cartCount, setCartCount] = useState<number>(1);
+  const [cartCount, setCartCount] = useState<number>(0);
   const [selectedProductId, setSelectedProductId] = useState<string>('chill-black');
   const [selectedEdition, setSelectedEdition] = useState<'noir' | 'ivory'>('noir');
   const [selectedSize, setSelectedSize] = useState<'S' | 'M' | 'L' | 'XL'>('L');
-  const [utrNumber, setUtrNumber] = useState<string>('429910488219');
-  const [activeOrderId, setActiveOrderId] = useState<string>('ORD-MFX-99412');
+  const [utrNumber, setUtrNumber] = useState<string>('');
+  const [activeOrderId, setActiveOrderId] = useState<string>('');
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
 
   const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress>(CURRENT_USER.deliveryAddress);
@@ -43,7 +43,7 @@ export default function App() {
   });
 
   const [isTaxInvoiceOpen, setIsTaxInvoiceOpen] = useState<boolean>(false);
-  const [invoiceOrder, setInvoiceOrder] = useState<OrderRecord>(INITIAL_ORDERS[0]);
+  const [invoiceOrder, setInvoiceOrder] = useState<OrderRecord | null>(null);
 
   // Load existing Supabase user session on startup
   useEffect(() => {
@@ -90,6 +90,10 @@ export default function App() {
     setSelectedSize(size);
     setCartCount(1);
     handleNavigate('cart-review');
+  };
+
+  const handleClearCart = () => {
+    setCartCount(0);
   };
 
   const handleViewProductDetail = (productId: string) => {
@@ -197,10 +201,12 @@ export default function App() {
             onUpdateSize={(s) => setSelectedSize(s)}
             selectedEdition={selectedEdition}
             selectedProductId={selectedProductId}
+            cartCount={cartCount}
+            onClearCart={handleClearCart}
           />
         )}
 
-        {currentScreen === 'delivery-sponsor' && (
+        {(currentScreen === 'delivery-sponsor' || currentScreen === 'delivery-referrer') && (
           <DeliveryAndSponsor
             onNavigate={handleNavigate}
             onProceedToPayment={handleProceedToPayment}
@@ -286,16 +292,22 @@ export default function App() {
       {!isTerminalLayout && <EditorialFooter onNavigate={handleNavigate} />}
 
       {/* Interactive Official Tax Invoice Modal */}
-      <TaxInvoiceModal
-        isOpen={isTaxInvoiceOpen}
-        onClose={() => setIsTaxInvoiceOpen(false)}
-        orderId={invoiceOrder.orderId}
-        invoiceId={invoiceOrder.invoiceId}
-        date={invoiceOrder.date}
-        customerName={invoiceOrder.deliveryAddress.fullName}
-        customerAddress={`${invoiceOrder.deliveryAddress.apartment}, ${invoiceOrder.deliveryAddress.street}, ${invoiceOrder.deliveryAddress.city}`}
-        amount={invoiceOrder.total}
-      />
+      {invoiceOrder && (
+        <TaxInvoiceModal
+          isOpen={isTaxInvoiceOpen}
+          onClose={() => setIsTaxInvoiceOpen(false)}
+          orderId={invoiceOrder.orderId}
+          invoiceId={invoiceOrder.invoiceId || `INV-${invoiceOrder.orderId.slice(-6)}`}
+          date={invoiceOrder.date}
+          customerName={invoiceOrder.deliveryAddress?.fullName || currentUser?.fullName || 'Verified Member'}
+          customerAddress={
+            invoiceOrder.deliveryAddress
+              ? `${invoiceOrder.deliveryAddress.apartment || ''}, ${invoiceOrder.deliveryAddress.street || ''}, ${invoiceOrder.deliveryAddress.city || ''}`
+              : 'Consignee Delivery Address'
+          }
+          amount={invoiceOrder.total || 2000}
+        />
+      )}
     </div>
   );
 }

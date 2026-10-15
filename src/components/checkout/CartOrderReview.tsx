@@ -10,6 +10,8 @@ interface CartOrderReviewProps {
   onUpdateSize: (size: 'S' | 'M' | 'L' | 'XL') => void;
   selectedEdition?: 'noir' | 'ivory';
   selectedProductId?: string;
+  cartCount?: number;
+  onClearCart?: () => void;
 }
 
 export const CartOrderReview: React.FC<CartOrderReviewProps> = ({
@@ -19,6 +21,8 @@ export const CartOrderReview: React.FC<CartOrderReviewProps> = ({
   onUpdateSize,
   selectedEdition = 'noir',
   selectedProductId,
+  cartCount = 0,
+  onClearCart,
 }) => {
   const [isEditingSize, setIsEditingSize] = useState<boolean>(false);
   const [isEmptyCart, setIsEmptyCart] = useState<boolean>(false);
@@ -28,24 +32,24 @@ export const CartOrderReview: React.FC<CartOrderReviewProps> = ({
   const editionLabel = `${product.series.toUpperCase()} • ${product.gsm} GSM`;
   const editionTitle = product.name;
 
-  if (isEmptyCart) {
+  if (cartCount === 0 || isEmptyCart) {
     return (
       <div className="bg-noir-950 text-parchment-100 min-h-screen py-16">
         <div className="max-w-2xl mx-auto px-4 text-center space-y-6">
-          <div className="w-16 h-16 rounded-full hairline-border flex items-center justify-center mx-auto text-amberfox">
+          <div className="w-16 h-16 rounded-full hairline-border border-amberfox/30 flex items-center justify-center mx-auto text-amberfox">
             <ShoppingBag className="w-8 h-8" />
           </div>
-          <span className="font-mono text-xs uppercase tracking-luxury text-amberfox">0 items</span>
-          <h2 className="font-serif text-3xl uppercase tracking-wider">No garment selected.</h2>
+          <span className="font-mono text-xs uppercase tracking-luxury text-amberfox">0 items in cart</span>
+          <h2 className="font-serif text-3xl uppercase tracking-wider">Your Bag Is Empty</h2>
           <p className="text-xs text-parchment-400 max-w-md mx-auto">
-            Explore the collection and choose your size before beginning checkout. No order or payment has been created.
+            You have not selected any luxury pieces yet. Explore our signature collection to choose your fit and unlock member rewards.
           </p>
           <div className="pt-4">
             <button
-              onClick={() => onNavigate('product-detail')}
-              className="btn-gold-sheen text-noir-950 font-bold uppercase tracking-luxury px-6 py-3 text-xs"
+              onClick={() => onNavigate('products')}
+              className="btn-gold-sheen text-noir-950 font-bold uppercase tracking-luxury px-6 py-3 text-xs shadow-amber-glow cursor-pointer"
             >
-              Explore the Collection →
+              View Products →
             </button>
           </div>
         </div>
@@ -60,10 +64,10 @@ export const CartOrderReview: React.FC<CartOrderReviewProps> = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center space-x-2 text-[11px] font-mono tracking-luxury text-amberfox uppercase">
             <button
-              onClick={() => onNavigate('storefront')}
+              onClick={() => onNavigate('products')}
               className="hover:underline text-parchment-400 cursor-pointer"
             >
-              ATELIER
+              PRODUCTS
             </button>
             <span className="text-parchment-600">/</span>
             <span className="text-parchment-400">SHOPPING &amp; ACCOUNT ACCESS</span>
@@ -151,7 +155,10 @@ export const CartOrderReview: React.FC<CartOrderReviewProps> = ({
                       QUANTITY • 1
                     </span>
                     <button
-                      onClick={() => setIsEmptyCart(true)}
+                      onClick={() => {
+                        setIsEmptyCart(true);
+                        onClearCart?.();
+                      }}
                       className="hairline-border px-3 py-1.5 text-xs font-mono uppercase tracking-wider hover:text-red-400 cursor-pointer"
                     >
                       REMOVE

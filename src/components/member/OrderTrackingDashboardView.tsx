@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Truck,
   Package,
@@ -13,9 +13,11 @@ import {
   AlertCircle,
   HelpCircle,
   ChevronRight,
+  RefreshCw,
 } from 'lucide-react';
-import { BRAND_ASSETS, INITIAL_ORDERS } from '../../data/mockData';
+import { BRAND_ASSETS } from '../../data/mockData';
 import { OrderRecord } from '../../types';
+import { dbService } from '../../lib/dbService';
 
 interface OrderTrackingDashboardProps {
   onSelectOrderDetail: (order: OrderRecord) => void;
@@ -32,7 +34,31 @@ export const OrderTrackingDashboardView: React.FC<OrderTrackingDashboardProps> =
 }) => {
   const [activeFilter, setActiveFilter] = useState<TrackingStatusFilter>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(INITIAL_ORDERS[0].orderId);
+  const [orders, setOrders] = useState<OrderRecord[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+
+  const loadOrders = async () => {
+    try {
+      const list = await dbService.fetchOrders();
+      setOrders(list);
+      if (list.length > 0) {
+        setExpandedOrderId((prev) => prev || list[0].orderId);
+      }
+    } catch (err) {
+      console.error('Failed to load real-time orders:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadOrders();
+    const unsub = dbService.subscribeOrders(() => {
+      loadOrders();
+    });
+    return () => unsub();
+  }, []);
 
   // Helper to map order status into the 3 standardized categories
   const getNormalizedStatus = (status: OrderRecord['shipmentStatus']): 'Processing' | 'Shipped' | 'Delivered' => {
@@ -52,26 +78,25 @@ export const OrderTrackingDashboardView: React.FC<OrderTrackingDashboardProps> =
     }
   };
 
-  const getStepProgressIndex = (status: 'Processing' | 'Shipped' | 'Delivered', stage: number) => {
+  const getStepProgressIndex = (status: 'Processing' | 'Shipped' | 'Delivered', stage?: number) => {
     if (status === 'Delivered') return 3; // all completed
     if (status === 'Shipped') return 2;
-    return stage > 1 ? 1 : 0;
+    return (stage && stage > 1) ? 1 : 0;
   };
 
-  const filteredOrders = INITIAL_ORDERS.filter((order) => {
+  const filteredOrders = orders.filter((order) => {
     const norm = getNormalizedStatus(order.shipmentStatus).toLowerCase();
     const matchesFilter = activeFilter === 'all' || norm === activeFilter;
     const matchesSearch =
-      order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.utrNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.invoiceId.toLowerCase().includes(searchTerm.toLowerCase());
+      (order.orderId?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (order.productName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (order.trackingNumber?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
-  const processingCount = INITIAL_ORDERS.filter((o) => getNormalizedStatus(o.shipmentStatus) === 'Processing').length;
-  const shippedCount = INITIAL_ORDERS.filter((o) => getNormalizedStatus(o.shipmentStatus) === 'Shipped').length;
-  const deliveredCount = INITIAL_ORDERS.filter((o) => getNormalizedStatus(o.shipmentStatus) === 'Delivered').length;
+  const processingCount = orders.filter((o) => getNormalizedStatus(o.shipmentStatus) === 'Processing').length;
+  const shippedCount = orders.filter((o) => getNormalizedStatus(o.shipmentStatus) === 'Shipped').length;
+  const deliveredCount = orders.filter((o) => getNormalizedStatus(o.shipmentStatus) === 'Delivered').length;
 
   return (
     <div className="space-y-8">
@@ -94,7 +119,7 @@ export const OrderTrackingDashboardView: React.FC<OrderTrackingDashboardProps> =
           <span className="font-mono text-[10px] uppercase tracking-luxury text-amberfox-gold block">
             TOTAL ACTIVE ORDERS
           </span>
-          <div className="font-serif text-4xl text-parchment-100 font-bold">{INITIAL_ORDERS.length}</div>
+          <div className="font-serif text-4xl text-parchment-100 font-bold">{orders.length}</div>
           <p className="text-[11px] font-mono text-parchment-400">All registered garment orders</p>
         </div>
 
@@ -160,7 +185,7 @@ export const OrderTrackingDashboardView: React.FC<OrderTrackingDashboardProps> =
                   : 'bg-noir-950 hairline-border text-parchment-300 hover:border-amberfox hover:text-parchment-100'
               }`}
             >
-              All Orders ({INITIAL_ORDERS.length})
+              All Orders ({orders.length})
             </button>
             <button
               onClick={() => setActiveFilter('processing')}
@@ -209,7 +234,12 @@ export const OrderTrackingDashboardView: React.FC<OrderTrackingDashboardProps> =
 
         {/* Consignment Cards List */}
         <div className="space-y-6">
-          {filteredOrders.length > 0 ? (
+          {loading ? (
+            <div className="py-12 text-center font-mono text-xs text-parchment-400">
+              <RefreshCw className="w-5 h-5 text-amberfox animate-spin mx-auto mb-2" />
+              Loading real-time order stream...
+            </div>
+          ) : filteredOrders.length > 0 ? (
             filteredOrders.map((order) => {
               const normalizedStatus = getNormalizedStatus(order.shipmentStatus);
               const progressIdx = getStepProgressIndex(normalizedStatus, order.stage);
@@ -346,9 +376,11 @@ export const OrderTrackingDashboardView: React.FC<OrderTrackingDashboardProps> =
                         DESTINATION ADDRESS
                       </span>
                       <p className="text-parchment-300 text-[11px] truncate">
-                        {order.deliveryAddress.apartment}, {order.deliveryAddress.street}
+                        {order.deliveryAddress?.apartment || 'Standard Address'}, {order.deliveryAddress?.street || 'Delivery Hub'}
                       </p>
-                      <p className="text-[10px] text-parchment-400">{order.deliveryAddress.city} • PIN {order.deliveryAddress.pinCode}</p>
+                      <p className="text-[10px] text-parchment-400">
+                        {order.deliveryAddress?.city || 'Mumbai'} • PIN {order.deliveryAddress?.pinCode || '400001'}
+                      </p>
                     </div>
 
                     <div>

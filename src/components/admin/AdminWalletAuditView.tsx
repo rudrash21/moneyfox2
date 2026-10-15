@@ -51,7 +51,7 @@ export const AdminWalletAuditView: React.FC = () => {
 
       // Record immutable system audit log entry
       addAuditLog({
-        operatorId: 'admin@moneyfox.luxury',
+        operatorId: 'admin@moneyfox.co.in',
         operatorRole: 'Apex Admin',
         actionType: 'REWARD_CALCULATION',
         category: 'Compensation',

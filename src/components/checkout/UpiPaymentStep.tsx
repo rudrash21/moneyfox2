@@ -148,7 +148,7 @@ export const UpiPaymentStep: React.FC<UpiPaymentProps> = ({
             </div>
             <div className="py-2 border-b-2 border-emerald-500/80 text-emerald-400 flex items-center space-x-2">
               <span>✓</span>
-              <span>Delivery &amp; sponsor</span>
+              <span>Delivery &amp; referrer</span>
             </div>
             <div className="py-2 border-b-2 border-amberfox text-amberfox-gold flex items-center space-x-2">
               <span className="font-bold">03</span>
@@ -296,7 +296,7 @@ export const UpiPaymentStep: React.FC<UpiPaymentProps> = ({
               className="inline-flex items-center space-x-2 text-xs font-mono text-parchment-400 hover:text-amberfox cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>BACK TO DELIVERY &amp; SPONSOR</span>
+              <span>BACK TO DELIVERY &amp; REFERRER</span>
             </button>
           </div>
 

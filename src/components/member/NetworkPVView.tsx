@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { Copy, Share2, GitBranch, Search, Check, ExternalLink } from 'lucide-react';
-import { INITIAL_DOWNLINE } from '../../data/mockData';
+import React, { useState, useEffect } from 'react';
+import { Copy, Share2, GitBranch, Search, Check, ExternalLink, Lock, Unlock, Users, RefreshCw } from 'lucide-react';
+import { DownlineMember } from '../../types';
+import { userTreeStore, UserTreeInstance } from '../../data/userTreeStore';
+import { dbService } from '../../lib/dbService';
 
 interface NetworkPVProps {
   onOpenBinaryTree: () => void;
@@ -10,8 +12,62 @@ export const NetworkPVView: React.FC<NetworkPVProps> = ({ onOpenBinaryTree }) =>
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('all');
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  const [trees, setTrees] = useState<UserTreeInstance[]>(userTreeStore.getTrees());
+  const [activeTreeIndex, setActiveTreeIndex] = useState<number>(userTreeStore.getActiveTreeIndex());
+  const [members, setMembers] = useState<DownlineMember[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const referralLink = 'moneyfox.luxury/join?ref=mf10492';
+  const loadLiveUsers = async () => {
+    try {
+      const users = await dbService.fetchUsers();
+      if (users && users.length > 0) {
+        const mapped: DownlineMember[] = users.map((u, i) => ({
+          id: u.id || `m-${i}`,
+          memberId: u.moneyfox_id,
+          name: u.name,
+          sponsorId: u.referred_by || 'System Root',
+          paymentStatus: u.payment_completed ? 'Paid' : 'Pending',
+          placement: u.is_in_waiting_bench
+            ? 'Waiting bench'
+            : u.has_joined_tree
+            ? 'Placed in Tree'
+            : 'Unplaced',
+          tier: u.current_level || 1,
+          joinedDate: new Date(u.created_at).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          }),
+          contributionPV: u.payment_completed ? 100 : 0,
+        }));
+        setMembers(mapped);
+      } else {
+        setMembers([]);
+      }
+    } catch (err) {
+      console.error('Failed to load downlines:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLiveUsers();
+    const unsub = userTreeStore.subscribe(() => {
+      setTrees(userTreeStore.getTrees());
+      setActiveTreeIndex(userTreeStore.getActiveTreeIndex());
+    });
+    const unsubUsers = dbService.subscribeUsers(() => {
+      loadLiveUsers();
+    });
+    return () => {
+      unsub();
+      unsubUsers();
+    };
+  }, []);
+
+  const activeTree = trees[activeTreeIndex] || trees[0];
+  const referralLink = activeTree.referralLink;
 
   const handleCopyLink = () => {
     navigator.clipboard?.writeText(referralLink);
@@ -19,7 +75,7 @@ export const NetworkPVView: React.FC<NetworkPVProps> = ({ onOpenBinaryTree }) =>
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  const filteredMembers = INITIAL_DOWNLINE.filter((m) => {
+  const filteredMembers = members.filter((m) => {
     const matchesSearch =
       m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       m.memberId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -77,11 +133,32 @@ export const NetworkPVView: React.FC<NetworkPVProps> = ({ onOpenBinaryTree }) =>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Direct Referral Info */}
         <div className="lg:col-span-7 bg-noir-900 hairline-border p-6 sm:p-8 space-y-6">
-          <h2 className="font-serif text-2xl uppercase tracking-wider text-parchment-100">
-            Direct referral information
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-serif text-2xl uppercase tracking-wider text-parchment-100">
+              Direct referral information
+            </h2>
+            <div className="flex items-center gap-1.5 font-mono text-xs">
+              {trees.map((t, idx) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    setActiveTreeIndex(idx);
+                    userTreeStore.setActiveTreeIndex(idx);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] uppercase font-bold transition-all cursor-pointer border flex items-center gap-1 ${
+                    activeTreeIndex === idx
+                      ? 'bg-amberfox/20 border-amberfox text-amberfox'
+                      : 'bg-noir-950 border-amberfox/20 text-parchment-400 hover:text-parchment-200'
+                  }`}
+                >
+                  {t.isUnlocked ? <Unlock className="w-2.5 h-2.5 text-emerald-400" /> : <Lock className="w-2.5 h-2.5 text-amber-500" />}
+                  <span>Tree #{t.treeNumber}</span>
+                </button>
+              ))}
+            </div>
+          </div>
           <span className="font-mono text-xs uppercase tracking-luxury text-amberfox-gold block">
-            YOUR MEMBER ID / MF10492
+            ACTIVE MEMBER CODE / {activeTree.referralCode} ({activeTree.title})
           </span>
 
           <div>
@@ -118,8 +195,8 @@ export const NetworkPVView: React.FC<NetworkPVProps> = ({ onOpenBinaryTree }) =>
           </p>
 
           <div className="pt-3 border-t border-amberfox/15 font-mono text-xs space-y-1">
-            <span className="text-[10px] uppercase text-amberfox tracking-luxury">SPONSOR RECORD</span>
-            <p className="text-parchment-200">Rahul Sharma • mf10001 • Verified sponsor</p>
+            <span className="text-[10px] uppercase text-amberfox tracking-luxury">REFERRER RECORD</span>
+            <p className="text-parchment-200">Rahul Sharma • mf10001 • Verified referrer</p>
           </div>
         </div>
 
@@ -185,7 +262,7 @@ export const NetworkPVView: React.FC<NetworkPVProps> = ({ onOpenBinaryTree }) =>
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Name, member ID or sponsor..."
+              placeholder="Name, member ID or referrer..."
               className="w-full bg-noir-950 hairline-border p-2.5 text-xs text-parchment-100 focus:outline-none focus:border-amberfox"
             />
           </div>
@@ -207,54 +284,65 @@ export const NetworkPVView: React.FC<NetworkPVProps> = ({ onOpenBinaryTree }) =>
 
         {/* Downline Table */}
         <div className="overflow-x-auto pt-2">
-          <table className="w-full text-left font-mono text-xs divide-y divide-amberfox/15">
-            <thead>
-              <tr className="text-[10px] uppercase tracking-luxury text-parchment-400">
-                <th className="py-2.5">Member</th>
-                <th className="py-2.5">Sponsor</th>
-                <th className="py-2.5">Payment</th>
-                <th className="py-2.5">Placement</th>
-                <th className="py-2.5 text-right">Contribution</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-amberfox/10 text-[11px]">
-              {filteredMembers.map((m) => (
-                <tr key={m.id} className="hover:bg-noir-950/60">
-                  <td className="py-3">
-                    <p className="font-semibold text-parchment-100">{m.name} • {m.memberId}</p>
-                  </td>
-                  <td className="py-3 text-parchment-400">{m.sponsorId}</td>
-                  <td className="py-3">
-                    <span
-                      className={`inline-block px-1.5 py-0.5 text-[10px] uppercase ${
-                        m.paymentStatus === 'Paid'
-                          ? 'text-emerald-400'
-                          : m.paymentStatus === 'Pending'
-                          ? 'text-amberfox'
-                          : 'text-parchment-600'
-                      }`}
-                    >
-                      {m.paymentStatus}
-                    </span>
-                  </td>
-                  <td className="py-3 text-parchment-300">{m.placement}</td>
-                  <td className="py-3 text-right">
-                    <span className={m.contributionPV > 0 ? 'text-amberfox-gold font-semibold' : 'text-parchment-600'}>
-                      {m.contributionPV > 0 ? '1 Order' : '0 Orders'} {m.placement.includes('bench') && m.contributionPV > 0 ? '• unplaced' : ''}
-                    </span>
-                  </td>
+          {loading ? (
+            <div className="py-12 text-center text-xs font-mono text-parchment-400">
+              <RefreshCw className="w-5 h-5 text-amberfox animate-spin mx-auto mb-2" />
+              Loading real-time referrals directory...
+            </div>
+          ) : filteredMembers.length === 0 ? (
+            <div className="py-12 text-center font-mono space-y-2">
+              <Users className="w-7 h-7 mx-auto text-parchment-500 mb-1" />
+              <p className="text-xs text-parchment-200 font-semibold uppercase">No Referrals Registered</p>
+              <p className="text-[11px] text-parchment-400 max-w-sm mx-auto">
+                Members registered using your referral code will appear live in this ledger with placement status and volume.
+              </p>
+            </div>
+          ) : (
+            <table className="w-full text-left font-mono text-xs divide-y divide-amberfox/15">
+              <thead>
+                <tr className="text-[10px] uppercase tracking-luxury text-parchment-400">
+                  <th className="py-2.5">Member</th>
+                  <th className="py-2.5">Referrer</th>
+                  <th className="py-2.5">Payment</th>
+                  <th className="py-2.5">Placement</th>
+                  <th className="py-2.5 text-right">Contribution</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-amberfox/10 text-[11px]">
+                {filteredMembers.map((m) => (
+                  <tr key={m.id} className="hover:bg-noir-950/60">
+                    <td className="py-3">
+                      <p className="font-semibold text-parchment-100">{m.name} • {m.memberId}</p>
+                    </td>
+                    <td className="py-3 text-parchment-400">{m.sponsorId}</td>
+                    <td className="py-3">
+                      <span
+                        className={`inline-block px-1.5 py-0.5 text-[10px] uppercase ${
+                          m.paymentStatus === 'Paid'
+                            ? 'text-emerald-400'
+                            : m.paymentStatus === 'Pending'
+                            ? 'text-amberfox'
+                            : 'text-parchment-600'
+                        }`}
+                      >
+                        {m.paymentStatus}
+                      </span>
+                    </td>
+                    <td className="py-3 text-parchment-300">{m.placement}</td>
+                    <td className="py-3 text-right">
+                      <span className={m.contributionPV > 0 ? 'text-amberfox-gold font-semibold' : 'text-parchment-600'}>
+                        {m.contributionPV > 0 ? '1 Order' : '0 Orders'} {m.placement.includes('bench') && m.contributionPV > 0 ? '• unplaced' : ''}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
         <div className="pt-2 text-[11px] font-mono text-parchment-600 flex justify-between items-center">
-          <p>Showing {filteredMembers.length} of 32 associated members • Page 1 of 7</p>
-          <div className="space-x-2">
-            <span className="opacity-40">Previous</span>
-            <span className="text-amberfox cursor-pointer hover:underline">Next →</span>
-          </div>
+          <p>Showing {filteredMembers.length} of {members.length} associated members</p>
         </div>
       </div>
 

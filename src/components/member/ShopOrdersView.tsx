@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Search, ExternalLink, ArrowRight, FileText, CheckCircle2, Clock } from 'lucide-react';
-import { BRAND_ASSETS, INITIAL_ORDERS } from '../../data/mockData';
+import React, { useState, useEffect } from 'react';
+import { Search, ExternalLink, ArrowRight, FileText, CheckCircle2, Clock, RefreshCw } from 'lucide-react';
+import { BRAND_ASSETS } from '../../data/mockData';
 import { OrderRecord } from '../../types';
+import { dbService } from '../../lib/dbService';
 
 interface ShopOrdersProps {
   onSelectOrderTimeline: (order: OrderRecord) => void;
@@ -14,16 +15,43 @@ export const ShopOrdersView: React.FC<ShopOrdersProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedOrder, setSelectedOrder] = useState<OrderRecord>(INITIAL_ORDERS[0]);
+  const [orders, setOrders] = useState<OrderRecord[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedOrder, setSelectedOrder] = useState<OrderRecord | null>(null);
 
-  const filteredOrders = INITIAL_ORDERS.filter((order) => {
+  const loadOrders = async () => {
+    try {
+      const list = await dbService.fetchOrders();
+      setOrders(list);
+      if (list.length > 0) {
+        setSelectedOrder((prev) => prev || list[0]);
+      }
+    } catch (err) {
+      console.error('Failed to load shop orders:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadOrders();
+    const unsub = dbService.subscribeOrders(() => {
+      loadOrders();
+    });
+    return () => unsub();
+  }, []);
+
+  const filteredOrders = orders.filter((order) => {
     const matchesSearch =
-      order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.productName.toLowerCase().includes(searchTerm.toLowerCase());
+      (order.orderId?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (order.productName?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesStatus =
-      statusFilter === 'all' || order.shipmentStatus.toLowerCase().includes(statusFilter.toLowerCase());
+      statusFilter === 'all' || (order.shipmentStatus?.toLowerCase() || '').includes(statusFilter.toLowerCase());
     return matchesSearch && matchesStatus;
   });
+
+  const inTransitCount = orders.filter((o) => o.shipmentStatus === 'In transit').length;
+  const deliveredCount = orders.filter((o) => o.shipmentStatus === 'Delivered').length;
 
   return (
     <div className="space-y-8">
@@ -36,7 +64,7 @@ export const ShopOrdersView: React.FC<ShopOrdersProps> = ({
           Shop orders
         </h1>
         <p className="text-xs text-parchment-400 font-light mt-1">
-          Your merchandise, shipment progress and invoices in one ledger.
+          Your merchandise, shipment progress and invoices in one real-time ledger.
         </p>
       </div>
 
@@ -44,9 +72,9 @@ export const ShopOrdersView: React.FC<ShopOrdersProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-noir-900 hairline-border p-6 space-y-2">
           <span className="font-mono text-[10px] uppercase tracking-luxury text-parchment-400">
-            ORDERS
+            TOTAL ORDERS
           </span>
-          <div className="font-serif text-4xl text-amberfox font-bold">3</div>
+          <div className="font-serif text-4xl text-amberfox font-bold">{orders.length}</div>
           <p className="text-[11px] font-mono text-parchment-400">All merchandise orders</p>
         </div>
 
@@ -54,16 +82,16 @@ export const ShopOrdersView: React.FC<ShopOrdersProps> = ({
           <span className="font-mono text-[10px] uppercase tracking-luxury text-parchment-400">
             IN TRANSIT
           </span>
-          <div className="font-serif text-4xl text-parchment-100 font-bold">1</div>
-          <p className="text-[11px] font-mono text-amberfox-gold">Noir edition • L</p>
+          <div className="font-serif text-4xl text-parchment-100 font-bold">{inTransitCount}</div>
+          <p className="text-[11px] font-mono text-amberfox-gold">Air express consignments</p>
         </div>
 
         <div className="bg-noir-900 hairline-border p-6 space-y-2">
           <span className="font-mono text-[10px] uppercase tracking-luxury text-parchment-400">
             DELIVERED
           </span>
-          <div className="font-serif text-4xl text-parchment-100 font-bold">1</div>
-          <p className="text-[11px] font-mono text-emerald-400">Invoice available</p>
+          <div className="font-serif text-4xl text-parchment-100 font-bold">{deliveredCount}</div>
+          <p className="text-[11px] font-mono text-emerald-400">Invoice finalized</p>
         </div>
       </div>
 
@@ -138,7 +166,7 @@ export const ShopOrdersView: React.FC<ShopOrdersProps> = ({
                     key={order.orderId}
                     onClick={() => setSelectedOrder(order)}
                     className={`hover:bg-noir-950/60 cursor-pointer transition-colors ${
-                      selectedOrder.orderId === order.orderId ? 'bg-noir-950/80' : ''
+                      selectedOrder?.orderId === order.orderId ? 'bg-noir-950/80' : ''
                     }`}
                   >
                     <td className="py-3.5">
@@ -180,13 +208,13 @@ export const ShopOrdersView: React.FC<ShopOrdersProps> = ({
             </table>
           ) : (
             <div className="py-8 text-center text-xs font-mono text-parchment-400">
-              No orders matched your search criteria.
+              {loading ? 'Loading real-time order ledger...' : 'No orders matched your search criteria.'}
             </div>
           )}
         </div>
 
         <div className="pt-4 flex flex-col sm:flex-row justify-between items-center text-[11px] font-mono text-parchment-600 gap-4">
-          <p>Showing {filteredOrders.length} of 3 orders • ₹2,000 per unit includes 12% GST</p>
+          <p>Showing {filteredOrders.length} of {orders.length} orders • ₹2,000 per unit includes 12% GST</p>
           <button
             onClick={() => window.print()}
             className="hairline-border px-3 py-1.5 hover:border-amberfox text-parchment-300 uppercase tracking-luxury text-[10px]"
@@ -199,58 +227,66 @@ export const ShopOrdersView: React.FC<ShopOrdersProps> = ({
       {/* Selected Order & Empty Search Showcase Row */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Selected Order Box */}
-        <div className="lg:col-span-7 bg-noir-900 hairline-border p-6 sm:p-8 space-y-6">
-          <h3 className="font-serif text-xl uppercase tracking-wider text-parchment-100">
-            Selected order • {selectedOrder.orderId}
-          </h3>
+        {selectedOrder ? (
+          <div className="lg:col-span-7 bg-noir-900 hairline-border p-6 sm:p-8 space-y-6">
+            <h3 className="font-serif text-xl uppercase tracking-wider text-parchment-100">
+              Selected order • {selectedOrder.orderId}
+            </h3>
 
-          <div className="flex gap-4 items-center">
-            <img
-              src={BRAND_ASSETS.noirTeeImage}
-              alt="Noir Tee"
-              className="w-20 h-20 object-cover hairline-border bg-noir-850"
-            />
+            <div className="flex gap-4 items-center">
+              <img
+                src={BRAND_ASSETS.noirTeeImage}
+                alt="Noir Tee"
+                className="w-20 h-20 object-cover hairline-border bg-noir-850"
+              />
+              <div>
+                <span className="text-[10px] font-mono text-parchment-400 uppercase">NOIR EDITION • 280 GSM</span>
+                <h4 className="font-serif text-lg uppercase text-parchment-100">{selectedOrder.productName}</h4>
+                <p className="text-xs font-mono text-parchment-400">Size {selectedOrder.size} • Quantity {selectedOrder.quantity || 1}</p>
+                <p className="text-sm font-mono text-amberfox font-semibold mt-1">₹{selectedOrder.total || 2000} • Inclusive of 12% GST</p>
+              </div>
+            </div>
+
+            <div className="inline-block bg-noir-950 hairline-border px-3 py-1 text-xs font-mono text-amberfox-gold">
+              {selectedOrder.shipmentStatus} • {selectedOrder.carrier || 'Bluedart Express'}
+            </div>
+
             <div>
-              <span className="text-[10px] font-mono text-parchment-400 uppercase">NOIR EDITION • 280 GSM</span>
-              <h4 className="font-serif text-lg uppercase text-parchment-100">{selectedOrder.productName}</h4>
-              <p className="text-xs font-mono text-parchment-400">Size {selectedOrder.size} • Quantity 1</p>
-              <p className="text-sm font-mono text-amberfox font-semibold mt-1">₹2,000 • Inclusive of 12% GST</p>
+              <button
+                onClick={() => onSelectOrderTimeline(selectedOrder)}
+                className="btn-gold-sheen text-noir-950 px-6 py-3.5 text-xs font-bold uppercase tracking-luxury flex items-center shadow-amber-glow cursor-pointer"
+              >
+                <span>VIEW SHIPMENT TIMELINE</span>
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </button>
             </div>
           </div>
-
-          <div className="inline-block bg-noir-950 hairline-border px-3 py-1 text-xs font-mono text-amberfox-gold">
-            {selectedOrder.shipmentStatus} • {selectedOrder.carrier}
+        ) : (
+          <div className="lg:col-span-7 bg-noir-900 hairline-border p-6 sm:p-8 space-y-3 flex flex-col justify-center text-center">
+            <p className="font-serif text-lg text-parchment-200 uppercase">No active order selected</p>
+            <p className="text-xs font-mono text-parchment-400">Click any order in the ledger above to inspect real-time shipment milestones and download tax invoices.</p>
           </div>
-
-          <div>
-            <button
-              onClick={() => onSelectOrderTimeline(selectedOrder)}
-              className="btn-gold-sheen text-noir-950 px-6 py-3.5 text-xs font-bold uppercase tracking-luxury flex items-center shadow-amber-glow cursor-pointer"
-            >
-              <span>VIEW SHIPMENT TIMELINE</span>
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </button>
-          </div>
-        </div>
+        )}
 
         {/* Search State Inspector Box */}
         <div className="lg:col-span-5 bg-noir-900 hairline-border p-6 sm:p-8 space-y-4">
           <span className="font-mono text-[10px] uppercase tracking-luxury text-amberfox-gold block">
-            SEARCH / NO MATCHES
+            SEARCH / FILTER CONTROLS
           </span>
           <h4 className="font-serif text-xl uppercase tracking-wider text-parchment-100">
-            Empty-search state
+            Realtime Order Search
           </h4>
           <input
             type="text"
-            readOnly
-            value="ORD-MFX-00000"
-            className="w-full bg-noir-950 hairline-border p-2.5 text-xs font-mono text-parchment-400"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by order ID or product..."
+            className="w-full bg-noir-950 hairline-border p-2.5 text-xs font-mono text-parchment-200 focus:outline-none focus:border-amberfox"
           />
           <div className="border-l-2 border-amberfox bg-noir-950 p-3 text-xs font-mono space-y-1">
-            <span className="text-amberfox font-semibold block">No orders match this search</span>
+            <span className="text-amberfox font-semibold block">Live Supabase Sync Active</span>
             <p className="text-[11px] text-parchment-400 font-light">
-              Try a different order reference or clear the date and shipment filters. Your other orders are still in the ledger.
+              Orders update automatically the moment admin reconciles payments or dispatches consignments.
             </p>
           </div>
           <button
@@ -260,7 +296,7 @@ export const ShopOrdersView: React.FC<ShopOrdersProps> = ({
             }}
             className="hairline-border px-4 py-2 text-xs font-mono uppercase tracking-wider text-parchment-300 hover:border-amberfox hover:text-amberfox cursor-pointer"
           >
-            CLEAR SEARCH &amp; FILTERS
+            RESET SEARCH &amp; FILTERS
           </button>
         </div>
       </div>
