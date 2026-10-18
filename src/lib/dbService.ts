@@ -34,7 +34,6 @@ export interface DbUser {
   is_in_waiting_bench: boolean;
   waiting_bench_type: string | null;
   waiting_bench_entry_date: string | null;
-  waiting_in_bench_of: string | null;
   wallet_balance: number;
   current_level: number;
   created_at: string;
@@ -239,6 +238,9 @@ export const dbService = {
           size: o.size || 'L',
           quantity: o.quantity || 1,
           total: Number(o.amount) || 2000,
+          taxableValue: Math.round((Number(o.amount) || 2000) / 1.18),
+          gstAmount: (Number(o.amount) || 2000) - Math.round((Number(o.amount) || 2000) / 1.18),
+          stage: o.shipment_status === 'Delivered' ? 6 : o.shipment_status === 'In transit' ? 4 : 2,
           paymentMethod: 'UPI • Instant Verified',
           paymentStatus: o.shipment_status === 'Verification pending' ? 'Verification pending' : 'Paid',
           shipmentStatus: o.shipment_status || 'Preparing',
@@ -450,6 +452,11 @@ export const dbService = {
         size: selectedSize,
         quantity: 1,
         total: amount,
+        taxableValue: Math.round(amount / 1.18),
+        gstAmount: amount - Math.round(amount / 1.18),
+        stage: 1,
+        invoiceId: `INV-${orderId.slice(-6)}`,
+        utrNumber: cleanUtr,
         paymentMethod: 'UPI (UTR: ' + cleanUtr + ')',
         paymentStatus: 'Verification pending',
         shipmentStatus: 'Verification pending',

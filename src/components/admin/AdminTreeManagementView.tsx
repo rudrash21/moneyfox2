@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   GitBranch,
   Search,
@@ -13,6 +13,7 @@ import {
   ChevronRight,
   ShieldAlert,
 } from 'lucide-react';
+import { dbService, DbUser } from '../../lib/dbService';
 
 interface TreeNode {
   id: string;
@@ -30,114 +31,77 @@ interface TreeNode {
   rightChildId?: string;
 }
 
+const DEFAULT_APEX_ROOT: TreeNode = {
+  id: 'node-root',
+  memberId: 'MF-OPS-ROOT',
+  name: 'Apex Admin System Root',
+  email: 'admin@moneyfox.luxury',
+  role: 'Root',
+  level: 1,
+  leftPv: 0,
+  rightPv: 0,
+  placement: 'root',
+  status: 'Active',
+};
+
 export const AdminTreeManagementView: React.FC = () => {
-  const [searchId, setSearchId] = useState<string>('mf10492');
-  const [rootId, setRootId] = useState<string>('mf10492');
-  const [selectedNodeId, setSelectedNodeId] = useState<string>('mf10492');
+  const [searchId, setSearchId] = useState<string>('MF-OPS-ROOT');
+  const [rootId, setRootId] = useState<string>('MF-OPS-ROOT');
+  const [selectedNodeId, setSelectedNodeId] = useState<string>('MF-OPS-ROOT');
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   // Initial Tree Network state
   const [treeData, setTreeData] = useState<Record<string, TreeNode>>({
-    mf10492: {
-      id: 'node-root',
-      memberId: 'mf10492',
-      name: 'Vikramaditya S.',
-      email: 'vikram.s@matrixguild.in',
-      role: 'Root',
-      level: 4,
-      leftPv: 1500,
-      rightPv: 1500,
-      placement: 'root',
-      status: 'Active',
-      leftChildId: 'mf10510',
-      rightChildId: 'mf10511',
-    },
-    mf10510: {
-      id: 'node-1',
-      memberId: 'mf10510',
-      name: 'Priya V.',
-      email: 'priya.v@matrixguild.in',
-      role: 'Member',
-      level: 3,
-      leftPv: 700,
-      rightPv: 800,
-      placement: 'left',
-      status: 'Active',
-      parentId: 'mf10492',
-      leftChildId: 'mf10520',
-      rightChildId: 'mf10521',
-    },
-    mf10511: {
-      id: 'node-2',
-      memberId: 'mf10511',
-      name: 'Amit K.',
-      email: 'amit.k@matrixguild.in',
-      role: 'Member',
-      level: 3,
-      leftPv: 800,
-      rightPv: 700,
-      placement: 'right',
-      status: 'Active',
-      parentId: 'mf10492',
-      leftChildId: 'mf10522',
-      rightChildId: 'mf10523',
-    },
-    mf10520: {
-      id: 'node-3',
-      memberId: 'mf10520',
-      name: 'Karan M.',
-      email: 'karan.m@guild.in',
-      role: 'Member',
-      level: 2,
-      leftPv: 300,
-      rightPv: 400,
-      placement: 'left',
-      status: 'Active',
-      parentId: 'mf10510',
-    },
-    mf10521: {
-      id: 'node-4',
-      memberId: 'mf10521',
-      name: 'Sneha R.',
-      email: 'sneha.r@guild.in',
-      role: 'Member',
-      level: 2,
-      leftPv: 350,
-      rightPv: 450,
-      placement: 'right',
-      status: 'Active',
-      parentId: 'mf10510',
-    },
-    mf10522: {
-      id: 'node-5',
-      memberId: 'mf10522',
-      name: 'Rohit P.',
-      email: 'rohit.p@guild.in',
-      role: 'Member',
-      level: 2,
-      leftPv: 400,
-      rightPv: 400,
-      placement: 'left',
-      status: 'Active',
-      parentId: 'mf10511',
-    },
-    mf10523: {
-      id: 'node-6',
-      memberId: 'mf10523',
-      name: 'Ananya D.',
-      email: 'ananya.d@guild.in',
-      role: 'Member',
-      level: 1,
-      leftPv: 100,
-      rightPv: 100,
-      placement: 'right',
-      status: 'Active',
-      parentId: 'mf10511',
-    },
+    'MF-OPS-ROOT': DEFAULT_APEX_ROOT,
   });
 
-  const currentNode = treeData[selectedNodeId] || treeData['mf10492'];
-  const rootNode = treeData[rootId] || treeData['mf10492'];
+  const loadTreeFromSupabase = async () => {
+    try {
+      const users = await dbService.fetchUsers();
+      if (users && users.length > 0) {
+        const map: Record<string, TreeNode> = {};
+        users.forEach((u, idx) => {
+          const mId = u.moneyfox_id || `user-${idx}`;
+          map[mId] = {
+            id: u.id || `node-${idx}`,
+            memberId: mId,
+            name: u.name || (u.role === 'admin' ? 'Apex Admin' : 'Member'),
+            email: u.email,
+            role: u.role === 'admin' ? 'Root' : 'Member',
+            level: u.current_level || 1,
+            leftPv: 0,
+            rightPv: 0,
+            placement: u.parent_id ? 'left' : 'root',
+            status: u.payment_completed ? 'Active' : 'Pending',
+            parentId: u.parent_id || undefined,
+            leftChildId: u.left_child_id || undefined,
+            rightChildId: u.right_child_id || undefined,
+          };
+        });
+        const firstKey = Object.keys(map)[0];
+        setTreeData(map);
+        setRootId(firstKey);
+        setSelectedNodeId(firstKey);
+        setSearchId(firstKey);
+      } else {
+        setTreeData({ 'MF-OPS-ROOT': DEFAULT_APEX_ROOT });
+        setRootId('MF-OPS-ROOT');
+        setSelectedNodeId('MF-OPS-ROOT');
+        setSearchId('MF-OPS-ROOT');
+      }
+    } catch (err) {
+      console.error('Failed to load tree from Supabase:', err);
+    }
+  };
+
+  useEffect(() => {
+    loadTreeFromSupabase();
+    const unsub = dbService.subscribeUsers(() => loadTreeFromSupabase());
+    return () => unsub();
+  }, []);
+
+  const currentNode = treeData[selectedNodeId] || treeData[rootId] || DEFAULT_APEX_ROOT;
+  const rootNode = treeData[rootId] || DEFAULT_APEX_ROOT;
 
   const leftChild = rootNode.leftChildId ? treeData[rootNode.leftChildId] : null;
   const rightChild = rootNode.rightChildId ? treeData[rootNode.rightChildId] : null;
@@ -159,7 +123,7 @@ export const AdminTreeManagementView: React.FC = () => {
       setRootId(foundKey);
       setActionNotice(`Centered tree on member: ${treeData[foundKey].memberId} (${treeData[foundKey].name})`);
     } else {
-      setActionNotice(`No tree node found for "${searchId}". Try mf10492, mf10510, or mf10511.`);
+      setActionNotice(`No tree node found for "${searchId}".`);
     }
   };
 
@@ -185,10 +149,11 @@ export const AdminTreeManagementView: React.FC = () => {
   };
 
   const handleResetToMainRoot = () => {
-    setRootId('mf10492');
-    setSelectedNodeId('mf10492');
-    setSearchId('mf10492');
-    setActionNotice('Reset view to system root (mf10492)');
+    const defaultKey = Object.keys(treeData)[0] || 'MF-OPS-ROOT';
+    setRootId(defaultKey);
+    setSelectedNodeId(defaultKey);
+    setSearchId(defaultKey);
+    setActionNotice(`Reset view to system root (${defaultKey})`);
   };
 
   return (
@@ -203,7 +168,7 @@ export const AdminTreeManagementView: React.FC = () => {
             Tree Management
           </h1>
           <p className="text-xs text-parchment-400 font-light mt-1">
-            Visual 2×2 binary network control • Search by mfXXXXX • Assign nodes, reparent branches &amp; re-root trees.
+            Visual 2×2 binary network control • Search by ID or Name • Assign nodes, reparent branches &amp; re-root trees.
           </p>
         </div>
 
@@ -214,7 +179,7 @@ export const AdminTreeManagementView: React.FC = () => {
             className="hairline-border px-3.5 py-2 text-xs font-mono uppercase tracking-wider text-parchment-200 hover:border-amberfox hover:text-amberfox flex items-center gap-1.5 cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5 text-amberfox" />
-            <span>Reset Root (mf10492)</span>
+            <span>Reset Root ({rootNode.memberId})</span>
           </button>
         </div>
       </div>

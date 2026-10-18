@@ -1,5 +1,7 @@
 import { BinaryNodeData } from '../components/public/NineLevelBinaryTree';
 import { addAuditLog } from './auditLogStore';
+import { UserProfile } from '../types';
+import { DbUser } from '../lib/dbService';
 
 export interface TreeUnlockRequirements {
   qualifyingPurchaseDone: boolean;
@@ -7,13 +9,17 @@ export interface TreeUnlockRequirements {
   qualifyingOrderId: string;
   adminApproved: boolean;
   adminApprovalDate?: string;
-  tree1Level1Completed: boolean;
-  tree1Level1Count: number; // e.g. 2 / 2
-  tree1Rewarded300: boolean;
+  previousTreeNumber: number;
+  previousTreeDirectReferralsCompleted: boolean;
+  previousTreeDirectReferralsCount: number; // e.g. 2 / 2
+  previousTreeLevel1Completed: boolean;
+  tree1Level1Completed?: boolean;
+  tree1Level1Count?: number;
+  tree1Rewarded300?: boolean;
 }
 
 export interface UserTreeInstance {
-  id: string; // 'tree-1', 'tree-2', 'tree-3', 'tree-4'
+  id: string; // 'tree-1', 'tree-2', 'tree-3', etc.
   treeNumber: number;
   title: string;
   badge: string;
@@ -57,7 +63,7 @@ export const buildTreeHierarchyForNumber = (treeNum: number): BinaryNodeData => 
     ],
   };
 
-  const pool = firstNamesPools[treeNum] || firstNamesPools[1];
+  const pool = firstNamesPools[treeNum] || firstNamesPools[((treeNum - 1) % 4) + 1] || firstNamesPools[1];
   const lastInitials = ['S.', 'V.', 'K.', 'M.', 'R.', 'P.', 'D.', 'T.', 'B.', 'G.', 'N.', 'J.', 'A.'];
   
   let codeBase = 10492 + (treeNum - 1) * 70;
@@ -130,68 +136,288 @@ export const buildTreeHierarchyForNumber = (treeNum: number): BinaryNodeData => 
     if (root.left) {
       root.left.name = 'PRIYA V.';
       root.left.code = 'mf10510';
-      root.left.tag = 'LEFT CHILD';
+      root.left.tag = 'LEFT CHILD (DIRECT #1)';
     }
     if (root.right) {
       root.right.name = 'AMIT K.';
       root.right.code = 'mf10511';
-      root.right.tag = 'RIGHT CHILD';
+      root.right.tag = 'RIGHT CHILD (DIRECT #2)';
     }
   } else if (treeNum === 2) {
     if (root.left) {
       root.left.name = 'DEEPAK S.';
       root.left.code = 'mf10580';
-      root.left.tag = 'T2 LEFT CHILD';
+      root.left.tag = 'T2 LEFT CHILD (DIRECT #1)';
     }
     if (root.right) {
       root.right.name = 'POOJA R.';
       root.right.code = 'mf10581';
-      root.right.tag = 'T2 RIGHT CHILD';
+      root.right.tag = 'T2 RIGHT CHILD (DIRECT #2)';
     }
   } else if (treeNum === 3) {
     if (root.left) {
       root.left.name = 'ALOK K.';
       root.left.code = 'mf10620';
-      root.left.tag = 'T3 LEFT CHILD';
+      root.left.tag = 'T3 LEFT CHILD (DIRECT #1)';
     }
     if (root.right) {
       root.right.name = 'ISHAAN B.';
       root.right.code = 'mf10621';
-      root.right.tag = 'T3 RIGHT CHILD';
+      root.right.tag = 'T3 RIGHT CHILD (DIRECT #2)';
     }
   } else if (treeNum === 4) {
     if (root.left) {
       root.left.name = 'SHREYA N.';
       root.left.code = 'mf10650';
-      root.left.tag = 'T4 LEFT CHILD';
+      root.left.tag = 'T4 LEFT CHILD (DIRECT #1)';
     }
     if (root.right) {
       root.right.name = 'ARJUN V.';
       root.right.code = 'mf10651';
-      root.right.tag = 'T4 RIGHT CHILD';
+      root.right.tag = 'T4 RIGHT CHILD (DIRECT #2)';
+    }
+  } else {
+    if (root.left) {
+      root.left.name = `DIRECT 1 (T${treeNum})`;
+      root.left.code = `mf${codeBase + 1}`;
+      root.left.tag = `T${treeNum} LEFT CHILD`;
+    }
+    if (root.right) {
+      root.right.name = `DIRECT 2 (T${treeNum})`;
+      root.right.code = `mf${codeBase + 2}`;
+      root.right.tag = `T${treeNum} RIGHT CHILD`;
     }
   }
 
   return root;
 };
 
+interface TreeInternalState {
+  treeNumber: number;
+  purchased: boolean;
+  orderAmount: number;
+  orderId: string;
+  adminApproved: boolean;
+  adminApprovalDate?: string;
+  directReferralsCount: number; // 0, 1, or 2
+  directReferralsCompleted: boolean;
+  level1Completed: boolean;
+  level1Rewarded300: boolean;
+}
+
+const TREE_ORDINALS = [
+  '',
+  'Primary Matrix',
+  'Secondary Matrix',
+  'Tertiary Matrix',
+  'Quaternary Matrix',
+  'Quinary Matrix',
+  'Senary Matrix',
+  'Septenary Matrix',
+  'Octonary Matrix',
+  'Novary Matrix',
+  'Decary Matrix',
+];
+
+// Build a personalized binary tree for an authenticated user and their placed team
+export const buildUserOwnTree = (
+  user: UserProfile,
+  allDbUsers: DbUser[] = [],
+  treeNum: number = 1
+): BinaryNodeData => {
+  const userMoneyfoxId = user.moneyfoxId || 'MF-USER';
+  const userFullName = (user.fullName || user.email?.split('@')[0] || 'Member').toUpperCase();
+  const rootCode = treeNum === 1 ? userMoneyfoxId : `${userMoneyfoxId}-T${treeNum}`;
+  const rootName = treeNum === 1 ? userFullName : `${userFullName} (T${treeNum})`;
+  const rootTag = `TREE #${treeNum} ROOT`;
+
+  // Find user's record in allDbUsers if present
+  const dbUser = allDbUsers.find(
+    (u) =>
+      u.moneyfox_id === userMoneyfoxId ||
+      (user.authUserId && u.auth_user_id === user.authUserId) ||
+      (user.email && u.email?.toLowerCase() === user.email.toLowerCase())
+  );
+
+  const findChildren = (parentMemberId: string, parentRefCode?: string) => {
+    const parentRecord = allDbUsers.find((u) => u.moneyfox_id === parentMemberId);
+
+    let leftUser: DbUser | undefined = undefined;
+    let rightUser: DbUser | undefined = undefined;
+
+    if (parentRecord?.left_child_id) {
+      leftUser = allDbUsers.find((u) => u.moneyfox_id === parentRecord.left_child_id);
+    }
+    if (parentRecord?.right_child_id) {
+      rightUser = allDbUsers.find((u) => u.moneyfox_id === parentRecord.right_child_id);
+    }
+
+    const downlines = allDbUsers.filter(
+      (u) =>
+        u.moneyfox_id !== parentMemberId &&
+        (u.parent_id === parentMemberId ||
+          (u.referred_by && (u.referred_by === parentMemberId || (parentRefCode && u.referred_by === parentRefCode))))
+    );
+
+    for (const d of downlines) {
+      if ((d as any).placement === 'left' && !leftUser) {
+        leftUser = d;
+      } else if ((d as any).placement === 'right' && !rightUser) {
+        rightUser = d;
+      }
+    }
+
+    const remaining = downlines.filter((d) => d !== leftUser && d !== rightUser);
+    if (!leftUser && remaining.length > 0) {
+      leftUser = remaining.shift();
+    }
+    if (!rightUser && remaining.length > 0) {
+      rightUser = remaining.shift();
+    }
+
+    return { leftUser, rightUser };
+  };
+
+  const createAvailableSlot = (
+    depth: number,
+    branchSide: 'left' | 'right',
+    parentCode: string,
+    parentName: string
+  ): BinaryNodeData => ({
+    id: `slot-${parentCode}-${branchSide}-d${depth}`,
+    name: 'AVAILABLE SLOT',
+    code: 'AVAILABLE',
+    tag: `${branchSide.toUpperCase()} SLOT`,
+    depth,
+    levelTier: Math.max(1, 10 - depth),
+    parentCode,
+    parentName,
+    branchSide,
+    isAvailableSlot: true,
+    leftPV: 0,
+    rightPV: 0,
+  });
+
+  const createMemberSubtree = (
+    member: DbUser,
+    depth: number,
+    branchSide: 'left' | 'right',
+    parentCode: string,
+    parentName: string
+  ): BinaryNodeData => {
+    const memberName = (member.name || 'Team Member').toUpperCase();
+    const memberCode = member.moneyfox_id;
+    const tag = depth === 1 ? (branchSide === 'left' ? 'LEFT CHILD' : 'RIGHT CHILD') : `L${depth} ${branchSide.toUpperCase()}`;
+    const levelTier = member.current_level || Math.max(1, 10 - depth);
+
+    const { leftUser, rightUser } = findChildren(member.moneyfox_id, member.referral_code);
+
+    let leftChild: BinaryNodeData | undefined = undefined;
+    let rightChild: BinaryNodeData | undefined = undefined;
+
+    if (depth < 8) {
+      if (leftUser) {
+        leftChild = createMemberSubtree(leftUser, depth + 1, 'left', memberCode, memberName);
+      } else if (depth <= 2) {
+        leftChild = createAvailableSlot(depth + 1, 'left', memberCode, memberName);
+      }
+
+      if (rightUser) {
+        rightChild = createMemberSubtree(rightUser, depth + 1, 'right', memberCode, memberName);
+      } else if (depth <= 2) {
+        rightChild = createAvailableSlot(depth + 1, 'right', memberCode, memberName);
+      }
+
+      if (leftChild && !rightChild && depth < 8) {
+        rightChild = createAvailableSlot(depth + 1, 'right', memberCode, memberName);
+      } else if (!leftChild && rightChild && depth < 8) {
+        leftChild = createAvailableSlot(depth + 1, 'left', memberCode, memberName);
+      }
+    }
+
+    const calcPV = (node?: BinaryNodeData): number => {
+      if (!node || node.isAvailableSlot) return 0;
+      return 100 + (node.leftPV || 0) + (node.rightPV || 0);
+    };
+
+    return {
+      id: `${memberCode}-T${treeNum}`,
+      name: memberName,
+      code: memberCode,
+      tag,
+      depth,
+      levelTier,
+      parentCode,
+      parentName,
+      branchSide,
+      isAvailableSlot: false,
+      leftPV: calcPV(leftChild),
+      rightPV: calcPV(rightChild),
+      left: leftChild,
+      right: rightChild,
+    };
+  };
+
+  const { leftUser, rightUser } = findChildren(userMoneyfoxId, user.referralCode || dbUser?.referral_code);
+
+  let leftChild: BinaryNodeData | undefined = undefined;
+  let rightChild: BinaryNodeData | undefined = undefined;
+
+  if (leftUser) {
+    leftChild = createMemberSubtree(leftUser, 1, 'left', rootCode, rootName);
+  } else {
+    leftChild = createAvailableSlot(1, 'left', rootCode, rootName);
+  }
+
+  if (rightUser) {
+    rightChild = createMemberSubtree(rightUser, 1, 'right', rootCode, rootName);
+  } else {
+    rightChild = createAvailableSlot(1, 'right', rootCode, rootName);
+  }
+
+  const calcPV = (node?: BinaryNodeData): number => {
+    if (!node || node.isAvailableSlot) return 0;
+    return 100 + (node.leftPV || 0) + (node.rightPV || 0);
+  };
+
+  const rootNode: BinaryNodeData = {
+    id: `${rootCode}-T${treeNum}`,
+    name: rootName,
+    code: rootCode,
+    tag: rootTag,
+    depth: 0,
+    levelTier: user.currentLevel || 1,
+    branchSide: 'left',
+    leftPV: calcPV(leftChild),
+    rightPV: calcPV(rightChild),
+    left: leftChild,
+    right: rightChild,
+  };
+
+  return rootNode;
+};
+
 class UserTreeStore {
-  private activeTreeIndex: number = 0; // 0=Tree 1, 1=Tree 2, 2=Tree 3, 3=Tree 4
+  private activeTreeIndex: number = 0;
   private listeners: Set<() => void> = new Set();
+  private currentUser: UserProfile | null = null;
+  private dbUsers: DbUser[] = [];
 
-  // Multi-tree qualifying purchase & admin approval states
-  private tree1Level1Completed: boolean = true;
-  private tree1Rewarded300: boolean = true;
-  private tree1AdminApproved: boolean = true;
-
-  private tree2Purchased: boolean = true;
-  private tree2AdminApproved: boolean = true;
-
-  private tree3Purchased: boolean = true;
-  private tree3AdminApproved: boolean = true;
-
-  private tree4Purchased: boolean = true;
-  private tree4AdminApproved: boolean = true;
+  // Multi-tree internal states
+  private treeStates: TreeInternalState[] = [
+    {
+      treeNumber: 1,
+      purchased: true,
+      orderAmount: 2000,
+      orderId: 'ORD-MFX-99412',
+      adminApproved: true,
+      adminApprovalDate: 'Initial Registration',
+      directReferralsCount: 0,
+      directReferralsCompleted: false,
+      level1Completed: false,
+      level1Rewarded300: false,
+    },
+  ];
 
   private trees: UserTreeInstance[] = [];
 
@@ -199,150 +425,175 @@ class UserTreeStore {
     this.recomputeTrees();
   }
 
+  private ensureTreeState(treeNum: number): TreeInternalState {
+    let state = this.treeStates.find((s) => s.treeNumber === treeNum);
+    if (!state) {
+      state = {
+        treeNumber: treeNum,
+        purchased: true,
+        orderAmount: 2000,
+        orderId: `ORD-MFX-${99450 + treeNum * 30}`,
+        adminApproved: treeNum === 1,
+        adminApprovalDate: treeNum === 1 ? 'Initial Registration' : undefined,
+        directReferralsCount: 0,
+        directReferralsCompleted: false,
+        level1Completed: false,
+        level1Rewarded300: false,
+      };
+      this.treeStates.push(state);
+    }
+    return state;
+  }
+
   private recomputeTrees() {
-    // Tree 1: Unlocked on ₹2000 purchase + Admin approval
-    const tree1Unlocked = this.tree1AdminApproved;
+    const computedTrees: UserTreeInstance[] = [];
+    let currentTreeNum = 1;
+    let allowNext = true;
 
-    // Tree 2: Unlocked when Tree 1 Level 1 is completed (2/2) & ₹300 rewarded & Admin approved
-    const tree2Unlocked =
-      this.tree2Purchased &&
-      this.tree2AdminApproved &&
-      this.tree1Level1Completed &&
-      this.tree1Rewarded300;
+    // Rule: Tree #(k+1) is ONLY computed and showed in dropbox if Tree #k Level 1 is completed
+    while (allowNext && currentTreeNum <= 10) {
+      const treeNum = currentTreeNum;
+      const state = this.ensureTreeState(treeNum);
+      const isFirst = treeNum === 1;
+      const beforeTree = !isFirst ? computedTrees[computedTrees.length - 1] : null;
 
-    // Tree 3 & 4 unlocked and accessible when active
-    const tree3Unlocked = this.tree3Purchased && this.tree3AdminApproved;
-    const tree4Unlocked = this.tree4Purchased && this.tree4AdminApproved;
+      // Build root node: real user structure when authenticated, or deterministic demo tree
+      const rootNode = this.currentUser
+        ? buildUserOwnTree(this.currentUser, this.dbUsers, treeNum)
+        : buildTreeHierarchyForNumber(treeNum);
 
-    this.trees = [
-      {
-        id: 'tree-1',
-        treeNumber: 1,
-        title: 'Tree #1 · Primary Matrix',
-        badge: 'Active · Level 1 Complete (₹300 Rewarded)',
-        referralCode: 'mf10492',
-        referralLink: 'moneyfox.luxury/join?ref=mf10492',
-        isUnlocked: tree1Unlocked,
-        unlockRequirements: {
-          qualifyingPurchaseDone: true,
-          qualifyingOrderAmount: 2000,
-          qualifyingOrderId: 'ORD-MFX-99412',
-          adminApproved: this.tree1AdminApproved,
-          adminApprovalDate: '24 Oct 2025 · 14:18 IST',
-          tree1Level1Completed: this.tree1Level1Completed,
-          tree1Level1Count: this.tree1Level1Completed ? 2 : 1,
-          tree1Rewarded300: this.tree1Rewarded300,
-        },
+      // Check direct children (Level 1): Left and Right direct positions
+      const hasLeftDirect = Boolean(rootNode.left && !rootNode.left.isAvailableSlot);
+      const hasRightDirect = Boolean(rootNode.right && !rootNode.right.isAvailableSlot);
+      const realL1Complete = hasLeftDirect && hasRightDirect;
+
+      // Level 1 is completed if direct nodes are placed, or marked via rule tester
+      const isL1Done = realL1Complete || Boolean(state.level1Completed);
+      const directCount = (hasLeftDirect ? 1 : 0) + (hasRightDirect ? 1 : 0);
+
+      // Synchronize state
+      state.level1Completed = isL1Done;
+      state.directReferralsCompleted = isL1Done;
+      state.directReferralsCount = Math.max(state.directReferralsCount, directCount);
+
+      // Evaluate unlocked status
+      let isUnlocked = false;
+      let lockReason: string | undefined = undefined;
+      const hasPurchaseOver2000 = state.purchased && state.orderAmount >= 2000 && state.adminApproved;
+
+      if (isFirst) {
+        isUnlocked = this.currentUser
+          ? (this.currentUser.paymentCompleted || state.adminApproved)
+          : state.adminApproved;
+        if (!isUnlocked) {
+          lockReason = 'Initial ₹2,000 purchase awaiting administrative approval.';
+        }
+      } else if (beforeTree) {
+        const beforeL1Done = Boolean(
+          beforeTree.rootNode.left && !beforeTree.rootNode.left.isAvailableSlot &&
+          beforeTree.rootNode.right && !beforeTree.rootNode.right.isAvailableSlot
+        ) || beforeTree.unlockRequirements.previousTreeLevel1Completed;
+
+        isUnlocked = hasPurchaseOver2000 && beforeL1Done;
+        if (!isUnlocked) {
+          if (!beforeL1Done) {
+            lockReason = `Before Tree (Tree #${beforeTree.treeNumber}) must complete its Level 1 (2 direct referrals) before Tree #${treeNum} can unlock.`;
+          } else if (!hasPurchaseOver2000) {
+            lockReason = `Tree #${treeNum} requires another approved purchase over ₹2,000 to unlock.`;
+          }
+        }
+      }
+
+      const ordinal = TREE_ORDINALS[treeNum] || `Matrix #${treeNum}`;
+      const title = `Tree #${treeNum} · ${ordinal}`;
+      const userRefCode = this.currentUser
+        ? (this.currentUser.referralCode || this.currentUser.moneyfoxId)
+        : 'mf10492';
+      const refCode = treeNum === 1 ? userRefCode : `${userRefCode}-T${treeNum}`;
+      const hostOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://moneyfox.luxury';
+      const refLink = `${hostOrigin}/join?ref=${refCode}`;
+
+      let badge = isUnlocked
+        ? (isL1Done ? `Active · Level 1 Complete (₹300 Rewarded)` : `Active · ${ordinal} Unlocked`)
+        : `Locked · Complete Tree #${treeNum - 1} L1`;
+
+      const unlockRequirements: TreeUnlockRequirements = {
+        qualifyingPurchaseDone: state.purchased,
+        qualifyingOrderAmount: state.orderAmount,
+        qualifyingOrderId: state.orderId,
+        adminApproved: state.adminApproved,
+        adminApprovalDate: state.adminApprovalDate,
+        previousTreeNumber: isFirst ? 1 : treeNum - 1,
+        previousTreeDirectReferralsCompleted: isFirst ? isL1Done : Boolean(beforeTree?.unlockRequirements?.tree1Level1Completed),
+        previousTreeDirectReferralsCount: directCount,
+        previousTreeLevel1Completed: isFirst ? isL1Done : Boolean(beforeTree?.unlockRequirements?.tree1Level1Completed),
+        tree1Level1Completed: isL1Done,
+        tree1Level1Count: directCount,
+        tree1Rewarded300: isL1Done,
+      };
+
+      const countRealNodes = (n?: BinaryNodeData): number => {
+        if (!n || n.isAvailableSlot) return 0;
+        return 1 + countRealNodes(n.left) + countRealNodes(n.right);
+      };
+
+      const realLeft = countRealNodes(rootNode.left);
+      const realRight = countRealNodes(rootNode.right);
+      const totalNodes = this.currentUser ? (1 + realLeft + realRight) : (isUnlocked ? Math.max(3, 31 - (treeNum - 1) * 8) : 0);
+
+      computedTrees.push({
+        id: `tree-${treeNum}`,
+        treeNumber: treeNum,
+        title,
+        badge,
+        referralCode: refCode,
+        referralLink: refLink,
+        isUnlocked,
+        unlockRequirements,
+        lockReason,
         stats: {
-          totalNodes: 31,
-          leftMembers: 15,
-          rightMembers: 15,
-          leftPV: 1500,
-          rightPV: 1500,
-          currentDepth: 3,
-          totalEarned: 1800,
+          totalNodes,
+          leftMembers: this.currentUser ? realLeft : Math.floor(totalNodes / 2),
+          rightMembers: this.currentUser ? realRight : Math.ceil(totalNodes / 2),
+          leftPV: rootNode.leftPV || 0,
+          rightPV: rootNode.rightPV || 0,
+          currentDepth: isUnlocked ? (this.currentUser ? (realLeft > 0 || realRight > 0 ? 1 : 0) : Math.min(3, Math.max(1, 4 - treeNum))) : 0,
+          totalEarned: isUnlocked && (realLeft >= 1 && realRight >= 1) ? 300 : 0,
           cyclePotential: 153300,
         },
-        rootNode: buildTreeHierarchyForNumber(1),
-      },
-      {
-        id: 'tree-2',
-        treeNumber: 2,
-        title: 'Tree #2 · Secondary Matrix',
-        badge: tree2Unlocked
-          ? 'Active · Secondary Referral Code Unlocked'
-          : 'Locked · Complete Tree 1 L1 & Earn ₹300',
-        referralCode: 'mf10492-T2',
-        referralLink: 'moneyfox.luxury/join?ref=mf10492-T2',
-        isUnlocked: tree2Unlocked,
-        lockReason: !this.tree1Level1Completed
-          ? 'Complete Tree #1 Level 1 (2 direct members on Left & Right child) to unlock.'
-          : !this.tree1Rewarded300
-          ? 'Tree #1 ₹300 Level 1 reward must be earned before Tree #2 can be unlocked.'
-          : undefined,
-        unlockRequirements: {
-          qualifyingPurchaseDone: this.tree2Purchased,
-          qualifyingOrderAmount: 2000,
-          qualifyingOrderId: 'ORD-MFX-99488',
-          adminApproved: this.tree2AdminApproved,
-          adminApprovalDate: 'Today · 10:15 IST',
-          tree1Level1Completed: this.tree1Level1Completed,
-          tree1Level1Count: this.tree1Level1Completed ? 2 : 1,
-          tree1Rewarded300: this.tree1Rewarded300,
-        },
-        stats: {
-          totalNodes: tree2Unlocked ? 7 : 0,
-          leftMembers: tree2Unlocked ? 3 : 0,
-          rightMembers: tree2Unlocked ? 3 : 0,
-          leftPV: tree2Unlocked ? 350 : 0,
-          rightPV: tree2Unlocked ? 350 : 0,
-          currentDepth: tree2Unlocked ? 2 : 0,
-          totalEarned: 0,
-          cyclePotential: 153300,
-        },
-        rootNode: buildTreeHierarchyForNumber(2),
-      },
-      {
-        id: 'tree-3',
-        treeNumber: 3,
-        title: 'Tree #3 · Tertiary Matrix',
-        badge: tree3Unlocked ? 'Active · Tertiary Referral Code Unlocked' : 'Pending Activation',
-        referralCode: 'mf10492-T3',
-        referralLink: 'moneyfox.luxury/join?ref=mf10492-T3',
-        isUnlocked: tree3Unlocked,
-        unlockRequirements: {
-          qualifyingPurchaseDone: this.tree3Purchased,
-          qualifyingOrderAmount: 2000,
-          qualifyingOrderId: 'ORD-MFX-99520',
-          adminApproved: this.tree3AdminApproved,
-          adminApprovalDate: 'Today · 10:20 IST',
-          tree1Level1Completed: true,
-          tree1Level1Count: 2,
-          tree1Rewarded300: true,
-        },
-        stats: {
-          totalNodes: 5,
-          leftMembers: 2,
-          rightMembers: 2,
-          leftPV: 200,
-          rightPV: 200,
-          currentDepth: 2,
-          totalEarned: 0,
-          cyclePotential: 153300,
-        },
-        rootNode: buildTreeHierarchyForNumber(3),
-      },
-      {
-        id: 'tree-4',
-        treeNumber: 4,
-        title: 'Tree #4 · Quaternary Matrix',
-        badge: tree4Unlocked ? 'Active · Quaternary Referral Code Unlocked' : 'Pending Activation',
-        referralCode: 'mf10492-T4',
-        referralLink: 'moneyfox.luxury/join?ref=mf10492-T4',
-        isUnlocked: tree4Unlocked,
-        unlockRequirements: {
-          qualifyingPurchaseDone: this.tree4Purchased,
-          qualifyingOrderAmount: 2000,
-          qualifyingOrderId: 'ORD-MFX-99540',
-          adminApproved: this.tree4AdminApproved,
-          adminApprovalDate: 'Today · 10:25 IST',
-          tree1Level1Completed: true,
-          tree1Level1Count: 2,
-          tree1Rewarded300: true,
-        },
-        stats: {
-          totalNodes: 3,
-          leftMembers: 1,
-          rightMembers: 1,
-          leftPV: 100,
-          rightPV: 100,
-          currentDepth: 1,
-          totalEarned: 0,
-          cyclePotential: 153300,
-        },
-        rootNode: buildTreeHierarchyForNumber(4),
-      },
-    ];
+        rootNode,
+      });
+
+      // STRICT RULE:
+      // "when the tree 1 is unlocked tree 2 has been shown then same for the other also if not unlocked it should not to be displayed"
+      // A tree can ONLY lead to the next tree being displayed if:
+      // 1. This tree itself is UNLOCKED (isUnlocked === true)
+      // 2. This tree's Level 1 is COMPLETED (isL1Done === true)
+      // If this tree is locked or its Level 1 is incomplete, STOP! Next tree MUST NOT be displayed!
+      if (!isUnlocked || !isL1Done) {
+        allowNext = false;
+      } else {
+        currentTreeNum++;
+      }
+    }
+
+    this.trees = computedTrees;
+    if (this.activeTreeIndex >= this.trees.length) {
+      this.activeTreeIndex = Math.max(0, this.trees.length - 1);
+    }
+  }
+
+  public setUser(user: UserProfile | null, dbUsers?: DbUser[]) {
+    this.currentUser = user;
+    if (dbUsers) {
+      this.dbUsers = dbUsers;
+    }
+    this.recomputeTrees();
+    this.notify();
+  }
+
+  public getCurrentUser(): UserProfile | null {
+    return this.currentUser;
   }
 
   public getTrees(): UserTreeInstance[] {
@@ -364,31 +615,125 @@ class UserTreeStore {
     }
   }
 
-  public approveTreePayment(treeNumber: 1 | 2 | 3 | 4 = 2) {
-    if (treeNumber === 1) this.tree1AdminApproved = true;
-    if (treeNumber === 2) this.tree2AdminApproved = true;
-    if (treeNumber === 3) this.tree3AdminApproved = true;
-    if (treeNumber === 4) this.tree4AdminApproved = true;
-    this.recomputeTrees();
-    this.notify();
+  // Check if eligible to start next tree based on Level 1 completion and unlocked rule
+  public canStartNewTree(): { allowed: boolean; reason?: string } {
+    const lastTree = this.trees[this.trees.length - 1];
+    if (!lastTree) return { allowed: true };
+    if (!lastTree.isUnlocked) {
+      return {
+        allowed: false,
+        reason: `Tree #${lastTree.treeNumber} is currently locked. Complete its unlock conditions before adding another tree.`,
+      };
+    }
+    const hasLeftDirect = Boolean(lastTree.rootNode.left && !lastTree.rootNode.left.isAvailableSlot);
+    const hasRightDirect = Boolean(lastTree.rootNode.right && !lastTree.rootNode.right.isAvailableSlot);
+    const lastState = this.treeStates.find((s) => s.treeNumber === lastTree.treeNumber);
+    const isL1Done = (hasLeftDirect && hasRightDirect) || Boolean(lastState?.level1Completed);
+
+    if (!isL1Done) {
+      return {
+        allowed: false,
+        reason: `Complete Level 1 (2 Direct Referrals) on Tree #${lastTree.treeNumber} before unlocking Tree #${lastTree.treeNumber + 1}.`,
+      };
+    }
+    return { allowed: true };
   }
 
-  public toggleTree1Level1Completion() {
-    this.tree1Level1Completed = !this.tree1Level1Completed;
+  // START AS MANY TREES AS YOU WANT (SEQUENTIALLY UNLOCKED AS LEVEL 1 IS COMPLETED)
+  public startNewTree(): UserTreeInstance {
+    const check = this.canStartNewTree();
+    if (!check.allowed) {
+      return this.getActiveTree();
+    }
+    const nextTreeNum = this.trees.length + 1;
+    const newTreeState = this.ensureTreeState(nextTreeNum);
+    newTreeState.purchased = true;
+    newTreeState.orderAmount = 2000;
+    newTreeState.adminApproved = true;
+    newTreeState.adminApprovalDate = 'Today · Activated';
     this.recomputeTrees();
+    this.activeTreeIndex = this.trees.length - 1;
     this.notify();
+    return this.trees[this.activeTreeIndex];
+  }
+
+  public approveTreePayment(treeNumber: number) {
+    const st = this.ensureTreeState(treeNumber);
+    if (st) {
+      st.purchased = true;
+      st.adminApproved = true;
+      st.adminApprovalDate = 'Today · Just now';
+      this.recomputeTrees();
+      this.notify();
+    }
+  }
+
+  public toggleTreePurchaseApproval(treeNumber: number) {
+    const st = this.ensureTreeState(treeNumber);
+    if (st) {
+      st.adminApproved = !st.adminApproved;
+      if (st.adminApproved) {
+        st.purchased = true;
+        st.adminApprovalDate = 'Today · Approved';
+      }
+      this.recomputeTrees();
+      this.notify();
+    }
+  }
+
+  public toggleTreeDirectReferrals(treeNumber: number) {
+    const st = this.ensureTreeState(treeNumber);
+    if (st) {
+      if (st.directReferralsCompleted) {
+        st.directReferralsCompleted = false;
+        st.directReferralsCount = 1;
+        st.level1Completed = false;
+        st.level1Rewarded300 = false;
+      } else {
+        st.directReferralsCompleted = true;
+        st.directReferralsCount = 2;
+        st.level1Completed = true;
+        st.level1Rewarded300 = true;
+      }
+      this.recomputeTrees();
+      this.notify();
+    }
+  }
+
+  public toggleTreeLevel1Completion(treeNumber: number) {
+    const st = this.ensureTreeState(treeNumber);
+    if (st) {
+      st.level1Completed = !st.level1Completed;
+      if (st.level1Completed) {
+        st.directReferralsCompleted = true;
+        st.directReferralsCount = 2;
+        st.level1Rewarded300 = true;
+      } else {
+        st.directReferralsCompleted = false;
+        st.directReferralsCount = 0;
+        st.level1Rewarded300 = false;
+      }
+      this.recomputeTrees();
+      this.notify();
+    }
+  }
+
+  // Compatibility helpers
+  public toggleTree1Level1Completion() {
+    this.toggleTreeLevel1Completion(1);
   }
 
   public toggleTree1Rewarded300() {
-    this.tree1Rewarded300 = !this.tree1Rewarded300;
-    this.recomputeTrees();
-    this.notify();
+    const st = this.treeStates.find((s) => s.treeNumber === 1);
+    if (st) {
+      st.level1Rewarded300 = !st.level1Rewarded300;
+      this.recomputeTrees();
+      this.notify();
+    }
   }
 
   public toggleTree2AdminApproval() {
-    this.tree2AdminApproved = !this.tree2AdminApproved;
-    this.recomputeTrees();
-    this.notify();
+    this.toggleTreePurchaseApproval(2);
   }
 
   public subscribe(listener: () => void): () => void {
@@ -410,3 +755,4 @@ class UserTreeStore {
 }
 
 export const userTreeStore = new UserTreeStore();
+

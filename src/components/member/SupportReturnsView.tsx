@@ -5,15 +5,13 @@ import { SupportTicket } from '../../types';
 
 export const SupportReturnsView: React.FC = () => {
   const [tickets, setTickets] = useState<SupportTicket[]>(INITIAL_SUPPORT_TICKETS);
-  const [order, setOrder] = useState<string>('ORD-MFX-99412 · Noir L · ₹2,000');
-  const [category, setCategory] = useState<string>('Return enquiry');
-  const [issue, setIssue] = useState<string>('Size / fit question');
-  const [description, setDescription] = useState<string>(
-    'I would like to discuss the fit of my Noir edition, size L. Please advise how to submit a return request once delivery is confirmed.'
-  );
-  const [confirmedCheck, setConfirmedCheck] = useState<boolean>(true);
-  const [hasSubmitted, setHasSubmitted] = useState<boolean>(true);
-  const [lastSubmittedId, setLastSubmittedId] = useState<string>('HELP-10492-03');
+  const [order, setOrder] = useState<string>('');
+  const [category, setCategory] = useState<string>('Order enquiry');
+  const [issue, setIssue] = useState<string>('General question');
+  const [description, setDescription] = useState<string>('');
+  const [confirmedCheck, setConfirmedCheck] = useState<boolean>(false);
+  const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
+  const [lastSubmittedId, setLastSubmittedId] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

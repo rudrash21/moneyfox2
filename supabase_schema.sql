@@ -56,6 +56,12 @@ CREATE TABLE IF NOT EXISTS public.inventory_adjustments (
 );
 
 -- 4. USERS / MEMBERS & ADMINS TABLE
+-- MULTI-TREE PROTOCOL:
+-- Members can start as many binary trees as they want without waiting for cycle completion.
+-- The next tree (Tree N+1) is unlocked when:
+--   1. An additional qualifying purchase over ₹2,000 is verified/approved.
+--   2. The before tree (Tree N) has completed its 2 direct referrals (Left & Right child).
+--   3. The before tree (Tree N) Level 1 has been completed (₹300 milestone).
 CREATE TABLE IF NOT EXISTS public.users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   auth_user_id TEXT UNIQUE,
@@ -74,9 +80,8 @@ CREATE TABLE IF NOT EXISTS public.users (
   referral_code TEXT UNIQUE NOT NULL,
   referred_by TEXT,
   is_in_waiting_bench BOOLEAN DEFAULT false,
-  waiting_bench_type TEXT,
+  waiting_bench_type TEXT DEFAULT 'global', -- Global waiting bench only for unreferred registrations (personal waiting bench removed)
   waiting_bench_entry_date TIMESTAMPTZ,
-  waiting_in_bench_of TEXT,
   wallet_balance NUMERIC DEFAULT 0,
   current_level INTEGER DEFAULT 1,
   created_at TIMESTAMPTZ DEFAULT NOW(),

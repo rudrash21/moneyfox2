@@ -153,14 +153,26 @@ export interface OrderRecord {
   size: string;
   quantity: number;
   total: number;
-  taxableValue: number;
-  gstAmount: number;
+  taxableValue?: number;
+  gstAmount?: number;
   shipmentStatus: 'Preparing' | 'In transit' | 'Delivered' | 'Verification pending';
-  invoiceId: string;
-  utrNumber: string;
+  invoiceId?: string;
+  utrNumber?: string;
   deliveryAddress: DeliveryAddress;
   carrier: string;
-  stage: number; // 1 to 6
+  stage?: number; // 1 to 6
+  paymentMethod?: string;
+  paymentStatus?: string;
+  trackingNumber?: string;
+  estimatedDelivery?: string;
+  dispatchHub?: string;
+  currentLocation?: string;
+  timeline?: {
+    status: string;
+    date: string;
+    description: string;
+    completed: boolean;
+  }[];
 }
 
 export interface DownlineMember {
@@ -169,10 +181,12 @@ export interface DownlineMember {
   memberId: string;
   sponsorId: string;
   paymentStatus: 'Paid' | 'Unpaid' | 'Pending';
-  placement: 'Placed · left' | 'Placed · right' | 'Waiting bench';
+  placement: 'Placed · left' | 'Placed · right' | 'Waiting bench' | 'Placed in Tree' | 'Unplaced' | string;
   contributionPV: number;
-  date: string;
-  accountStatus: 'Active' | 'Pending activation' | 'Restricted';
+  date?: string;
+  joinedDate?: string;
+  tier?: number;
+  accountStatus?: 'Active' | 'Pending activation' | 'Restricted';
 }
 
 export interface WithdrawalRequest {

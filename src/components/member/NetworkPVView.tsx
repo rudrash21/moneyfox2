@@ -33,6 +33,12 @@ export const NetworkPVView: React.FC<NetworkPVProps> = ({ onOpenBinaryTree }) =>
             ? 'Placed in Tree'
             : 'Unplaced',
           tier: u.current_level || 1,
+          date: new Date(u.created_at).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          }),
+          accountStatus: u.payment_completed ? 'Active' : 'Pending activation',
           joinedDate: new Date(u.created_at).toLocaleDateString('en-GB', {
             day: '2-digit',
             month: 'short',

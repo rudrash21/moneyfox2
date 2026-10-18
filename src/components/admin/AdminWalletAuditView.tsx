@@ -5,9 +5,9 @@ import { LedgerEvent } from '../../types';
 import { addAuditLog } from '../../data/auditLogStore';
 
 export const AdminWalletAuditView: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState<string>('mf10492');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [eventType, setEventType] = useState<string>('all');
-  const [selectedEvent, setSelectedEvent] = useState<LedgerEvent>(INITIAL_LEDGER_EVENTS[0]);
+  const [selectedEvent, setSelectedEvent] = useState<LedgerEvent | null>(INITIAL_LEDGER_EVENTS[0] || null);
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [calculationResult, setCalculationResult] = useState<{
     scannedNodes: number;
@@ -256,56 +256,70 @@ export const AdminWalletAuditView: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-amberfox/10 text-[11px]">
-              {filteredEvents.map((ev) => (
-                <tr
-                  key={ev.id}
-                  onClick={() => setSelectedEvent(ev)}
-                  className={`hover:bg-noir-950/60 cursor-pointer transition-colors ${
-                    selectedEvent.id === ev.id ? 'bg-noir-950/90 border-l-2 border-amberfox' : ''
-                  }`}
-                >
-                  <td className="py-3.5">
-                    <p className="font-semibold text-parchment-100">{ev.id}</p>
-                    <span className="text-[10px] text-parchment-400">{ev.timestamp}</span>
+              {filteredEvents.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-parchment-500">
+                    No ledger events found. Click "⚡ Calculate All Rewards" to audit network trees or record a transaction.
                   </td>
-                  <td className="py-3.5 text-parchment-300">
-                    {ev.type} / {ev.memberId}
-                  </td>
-                  <td className="py-3.5 font-semibold">
-                    <span className={ev.amount > 0 ? 'text-emerald-400' : 'text-amberfox'}>
-                      {ev.amount > 0 ? `+₹${ev.amount.toLocaleString('en-IN')}` : `-₹${Math.abs(ev.amount).toLocaleString('en-IN')}`}
-                    </span>
-                  </td>
-                  <td className="py-3.5 text-parchment-300">
-                    ₹{ev.beforeBalance.toLocaleString('en-IN')} → ₹{ev.afterBalance.toLocaleString('en-IN')}
-                  </td>
-                  <td className="py-3.5 text-right text-amberfox-gold">{ev.reference}</td>
                 </tr>
-              ))}
+              ) : (
+                filteredEvents.map((ev) => (
+                  <tr
+                    key={ev.id}
+                    onClick={() => setSelectedEvent(ev)}
+                    className={`hover:bg-noir-950/60 cursor-pointer transition-colors ${
+                      selectedEvent?.id === ev.id ? 'bg-noir-950/90 border-l-2 border-amberfox' : ''
+                    }`}
+                  >
+                    <td className="py-3.5">
+                      <p className="font-semibold text-parchment-100">{ev.id}</p>
+                      <span className="text-[10px] text-parchment-400">{ev.timestamp}</span>
+                    </td>
+                    <td className="py-3.5 text-parchment-300">
+                      {ev.type} / {ev.memberId}
+                    </td>
+                    <td className="py-3.5 font-semibold">
+                      <span className={ev.amount > 0 ? 'text-emerald-400' : 'text-amberfox'}>
+                        {ev.amount > 0 ? `+₹${ev.amount.toLocaleString('en-IN')}` : `-₹${Math.abs(ev.amount).toLocaleString('en-IN')}`}
+                      </span>
+                    </td>
+                    <td className="py-3.5 text-parchment-300">
+                      ₹{ev.beforeBalance.toLocaleString('en-IN')} → ₹{ev.afterBalance.toLocaleString('en-IN')}
+                    </td>
+                    <td className="py-3.5 text-right text-amberfox-gold">{ev.reference}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
         <p className="text-[11px] font-mono text-parchment-600">
-          Showing 5 of 48 events • Orders do not credit the available reward wallet. Paid withdrawals settle held funds, not available funds again.
+          Showing {filteredEvents.length} events • Orders do not credit the available reward wallet. Paid withdrawals settle held funds, not available funds again.
         </p>
       </div>
 
       {/* Bottom Detail Row: Selected Event & Sensitive Data View */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Selected Event Detail Panel */}
-        <div className="lg:col-span-7 bg-noir-900 hairline-border p-6 sm:p-8 space-y-6">
-          <div>
-            <span className="font-mono text-[10px] uppercase tracking-luxury text-amberfox-gold block mb-1">
-              EVENT DETAIL PANEL
-            </span>
-            <h3 className="font-serif text-2xl uppercase tracking-wider text-parchment-100">
-              Selected event • {selectedEvent.id}
-            </h3>
-            <div className="mt-2 inline-block bg-noir-950 font-mono text-[10px] uppercase px-2.5 py-0.5 hairline-border text-amberfox">
-              {selectedEvent.type} / {selectedEvent.status}
-            </div>
+        {!selectedEvent ? (
+          <div className="lg:col-span-7 bg-noir-900 hairline-border p-8 text-center font-mono text-xs text-parchment-500 space-y-2">
+            <p className="text-parchment-300 font-semibold uppercase">No Event Selected</p>
+            <p>Select a transaction from the event ledger table above or run reward calculation to view audit details.</p>
           </div>
+        ) : (
+          <div className="lg:col-span-7 bg-noir-900 hairline-border p-6 sm:p-8 space-y-6">
+            <div>
+              <span className="font-mono text-[10px] uppercase tracking-luxury text-amberfox-gold block mb-1">
+                EVENT DETAIL PANEL
+              </span>
+              <h3 className="font-serif text-2xl uppercase tracking-wider text-parchment-100">
+                Selected event • {selectedEvent.id}
+              </h3>
+              <div className="mt-2 inline-block bg-noir-950 font-mono text-[10px] uppercase px-2.5 py-0.5 hairline-border text-amberfox">
+                {selectedEvent.type} / {selectedEvent.status}
+              </div>
+            </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left font-mono text-xs divide-y divide-amberfox/15">
@@ -363,10 +377,11 @@ export const AdminWalletAuditView: React.FC = () => {
               No double debit
             </span>
             <p className="text-[11px] text-parchment-400 font-light leading-relaxed">
-              This event moves ₹1,000 from available to held escrow. A later paid event must reduce escrow without debiting available a second time.
+              This event moves funds from available to held escrow. A later paid event settles escrow without debiting available a second time.
             </p>
           </div>
         </div>
+        )}
 
         {/* Sensitive-Data View Panel */}
         <div className="lg:col-span-5 bg-noir-900 hairline-border p-6 sm:p-8 space-y-6 font-mono text-xs">

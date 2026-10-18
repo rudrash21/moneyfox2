@@ -25,6 +25,7 @@ import { BinaryTreeView } from './BinaryTreeView';
 import { PayoutsEscrowView } from './PayoutsEscrowView';
 import { AccountSecurityView } from './AccountSecurityView';
 import { SupportReturnsView } from './SupportReturnsView';
+import { userTreeStore } from '../../data/userTreeStore';
 
 interface MemberTerminalLayoutProps {
   onNavigate: (screen: ScreenView) => void;
@@ -42,6 +43,14 @@ export const MemberTerminalLayout: React.FC<MemberTerminalLayoutProps> = ({
   const [activeTab, setActiveTab] = useState<MemberTab>('order-tracking');
   const [selectedOrder, setSelectedOrder] = useState<OrderRecord | null>(null);
   const [orderCount, setOrderCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (currentUser) {
+      dbService.fetchUsers().then((dbUsers) => {
+        userTreeStore.setUser(currentUser, dbUsers);
+      });
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     const fetchRealOrders = async () => {
@@ -129,6 +138,7 @@ export const MemberTerminalLayout: React.FC<MemberTerminalLayoutProps> = ({
                 return (
                   <button
                     key={item.id}
+                    id={`nav-${item.id}`}
                     onClick={() => setActiveTab(item.id)}
                     className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-mono uppercase tracking-wider text-left transition-colors cursor-pointer ${
                       isActive
@@ -184,7 +194,7 @@ export const MemberTerminalLayout: React.FC<MemberTerminalLayoutProps> = ({
             <OrderDetailTrackingView
               order={selectedOrder}
               onBackToOrders={() => setActiveTab('order-tracking')}
-              onOpenInvoice={() => onOpenInvoice(selectedOrder)}
+              onOpenInvoice={() => onOpenInvoice(selectedOrder ?? undefined)}
               onOpenConcierge={() => setActiveTab('support-returns')}
             />
           )}
@@ -204,7 +214,11 @@ export const MemberTerminalLayout: React.FC<MemberTerminalLayoutProps> = ({
           )}
 
           {activeTab === 'binary-tree' && (
-            <BinaryTreeView onBackToPV={() => setActiveTab('network-pv')} />
+            <BinaryTreeView
+              onBackToPV={() => setActiveTab('network-pv')}
+              onNavigateTab={(tab) => setActiveTab(tab as MemberTab)}
+              currentUser={currentUser}
+            />
           )}
 
           {activeTab === 'overview' && (

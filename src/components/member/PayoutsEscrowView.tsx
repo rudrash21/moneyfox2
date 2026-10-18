@@ -4,8 +4,8 @@ import { INITIAL_WITHDRAWALS, CURRENT_USER } from '../../data/mockData';
 import { WithdrawalRequest } from '../../types';
 
 export const PayoutsEscrowView: React.FC = () => {
-  const [availableBalance, setAvailableBalance] = useState<number>(18900);
-  const [requestedAmount, setRequestedAmount] = useState<string>('5000');
+  const [availableBalance, setAvailableBalance] = useState<number>(CURRENT_USER.wallet.availableBalance);
+  const [requestedAmount, setRequestedAmount] = useState<string>('');
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>(INITIAL_WITHDRAWALS);
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -23,7 +23,7 @@ export const PayoutsEscrowView: React.FC = () => {
       return;
     }
     if (num > availableBalance) {
-      setSubmissionFeedback('Insufficient available balance. Amount exceeds ₹18,900.');
+      setSubmissionFeedback(`Insufficient available balance. Amount exceeds ₹${availableBalance.toLocaleString('en-IN')}.`);
       return;
     }
 

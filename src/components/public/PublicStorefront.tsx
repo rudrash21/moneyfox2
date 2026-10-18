@@ -65,10 +65,10 @@ export const PublicStorefront: React.FC<StorefrontProps> = ({
     },
     {
       number: 5,
-      title: 'Rejoin Cycle',
-      shortDesc: 'Complete all levels? Make another purchase to restart',
-      icon: RotateCcw,
-      details: "Complete all levels? Make another purchase to restart. When you reach the top level of rewards, you can voluntarily purchase another qualifying product above ₹2,000 to re-enter the commission matrix and restart a new earning cycle."
+      title: 'Multi-Tree Expansion',
+      shortDesc: 'Start as many trees as you want',
+      icon: GitBranch,
+      details: "You don't need to wait to complete all 9 levels. Start as many trees as you want! Whenever you make another qualifying purchase over ₹2,000 and your before tree has completed its 2 direct referrals and Level 1, your next tree is immediately unlocked. Each tree has its own dedicated referral link and independent ₹1,53,300 earning matrix."
     }
   ];
 
@@ -278,45 +278,50 @@ export const PublicStorefront: React.FC<StorefrontProps> = ({
             <div className="bg-gradient-to-br from-amber-950/30 via-noir-900/90 to-noir-950 border border-amberfox/35 rounded-xl p-6 sm:p-8 space-y-4 shadow-inner">
               <div className="flex items-center space-x-3 text-amberfox-gold font-bold text-base sm:text-lg">
                 <Clock className="w-6 h-6 text-amberfox shrink-0" />
-                <span className="font-serif tracking-wide uppercase">Waiting Bench System</span>
+                <span className="font-serif tracking-wide uppercase">Global Waiting Bench System</span>
               </div>
               <div className="space-y-3 text-sm sm:text-base text-parchment-300 leading-relaxed font-light">
                 <p>
                   <strong className="text-amber-400 font-semibold text-base sm:text-lg block sm:inline">• Global Waiting Bench: </strong>
-                  Users who sign up without a referral code are placed here for 21 days. After 21 days, they receive automatic compensation and can be placed in any available tree position.
+                  Users who register without a referral code enter the centralized Global Waiting Bench for 21 days. After 21 days, they receive automatic compensation and can be placed into active trees across the network.
                 </p>
                 <p>
-                  <strong className="text-amber-400 font-semibold text-base sm:text-lg block sm:inline">• Personal Waiting Bench: </strong>
-                  When you use a referral code that has already been used twice (both positions filled), you are placed in the referrer&apos;s personal waiting bench for 21 days. After 21 days, you receive compensation and can be placed elsewhere.
+                  <strong className="text-amber-400 font-semibold text-base sm:text-lg block sm:inline">• Direct Downline Spillover: </strong>
+                  There is no personal waiting bench. When a member shares their referral code, the first 2 referrals fill their Left and Right direct positions. All subsequent referrals immediately spill down into the next vacant position in their downline tree structure, ensuring zero delays!
                 </p>
               </div>
             </div>
 
-            {/* After Completing All 9 Levels Callout */}
+            {/* Multi-Tree Expansion Callout */}
             <div className="bg-gradient-to-br from-amber-500/10 via-amber-950/40 to-noir-950 border border-amber-500/50 rounded-xl p-6 sm:p-8 space-y-4 shadow-amber-glow">
               <div className="flex items-center space-x-3 text-amberfox font-bold text-base sm:text-lg">
-                <RotateCcw className="w-6 h-6 text-amberfox shrink-0" />
-                <span className="font-serif tracking-wide uppercase">After Completing All 9 Levels</span>
+                <GitBranch className="w-6 h-6 text-amberfox shrink-0" />
+                <span className="font-serif tracking-wide uppercase">Multi-Tree Expansion · Start As Many Trees As You Want</span>
               </div>
               <div className="space-y-3 text-sm sm:text-base text-parchment-200">
                 <div className="flex items-start space-x-3">
                   <CheckCircle2 className="w-5 h-5 text-amberfox mt-0.5 shrink-0" />
                   <span>
-                    Once you complete all 9 levels and earn ₹1,53,300, you can{' '}
-                    <strong className="text-amber-300 font-semibold underline decoration-amber-500/50 underline-offset-2">
-                      rejoin by making another purchase
-                    </strong>{' '}
-                    (above ₹2,000).
+                    You are never restricted to a single tree or forced to wait for cycle completion.{' '}
+                    <strong className="text-amber-300 font-semibold">
+                      Start as many binary trees as you want!
+                    </strong>
                   </span>
                 </div>
                 <div className="flex items-start space-x-3">
                   <CheckCircle2 className="w-5 h-5 text-amberfox mt-0.5 shrink-0" />
-                  <span>You&apos;ll get a fresh start with a new tree and can earn another full cycle of ₹1,53,300.</span>
+                  <span>
+                    <strong>Next Tree Unlock Rule:</strong> The next tree is unlocked when you make{' '}
+                    <strong className="text-amber-300 font-semibold underline decoration-amber-500/50 underline-offset-2">
+                      another purchase over ₹2,000
+                    </strong>{' '}
+                    AND your before tree has completed its <strong>2 direct referrals</strong> (Left &amp; Right child) and <strong>Level 1</strong> has been completed.
+                  </span>
                 </div>
                 <div className="flex items-start space-x-3">
                   <CheckCircle2 className="w-5 h-5 text-amberfox mt-0.5 shrink-0" />
                   <span className="text-amberfox-gold font-medium">
-                    There&apos;s no limit to how many times you can rejoin - your earning potential is unlimited!
+                    Each unlocked tree provides its own dedicated referral link (e.g., mf10492-T2, mf10492-T3...) and an independent ₹1,53,300 earning matrix, multiplying your income potential!
                   </span>
                 </div>
               </div>
@@ -333,7 +338,7 @@ export const PublicStorefront: React.FC<StorefrontProps> = ({
                 9-Level Commission Matrix
               </h2>
               <p className="text-sm sm:text-base text-parchment-300 mt-3 font-light leading-relaxed">
-                2×2 binary tree structure (Left and Right Child) with a personal/global waiting bench and 21-day spillover mechanism. Earn from ₹300 up to ₹76,800 across 9 progressive levels with a cumulative earning potential of ₹1,53,300.
+                2×2 binary tree structure (Left and Right Child) with automatic downline spillover and a 21-day Global Waiting Bench for unreferred members. Earn from ₹300 up to ₹76,800 across 9 progressive levels with a cumulative earning potential of ₹1,53,300.
               </p>
             </div>
 
@@ -353,11 +358,11 @@ export const PublicStorefront: React.FC<StorefrontProps> = ({
               <div className="bg-noir-900 hairline-border p-6 sm:p-8 space-y-3">
                 <div className="flex items-center space-x-2.5 text-amberfox mb-2">
                   <Clock className="w-5 h-5" />
-                  <span className="font-mono text-xs sm:text-sm uppercase tracking-luxury font-bold">Waiting Bench</span>
+                  <span className="font-mono text-xs sm:text-sm uppercase tracking-luxury font-bold">Global Bench</span>
                 </div>
                 <h4 className="font-serif text-lg sm:text-xl text-parchment-100 uppercase">21-Day Spillover Timer</h4>
                 <p className="text-sm text-parchment-300 font-light leading-relaxed">
-                  Referrals made after direct slots are filled enter a personal/global waiting bench with an active 21-day spillover timer for flexible manual placement or automatic optimal positioning.
+                  Unreferred registrations enter the centralized Global Waiting Bench with an active 21-day spillover timer for admin placement or automatic optimal positioning. Direct member referrals spill down instantly into the tree.
                 </p>
               </div>
 

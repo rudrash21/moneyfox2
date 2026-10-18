@@ -272,7 +272,7 @@ export const MemberOverviewView: React.FC<MemberOverviewViewProps> = ({
           <div className="p-3 rounded-lg bg-amberfox/5 border border-amberfox/15 flex items-center gap-3">
             <Sparkles className="w-4 h-4 text-amberfox shrink-0" />
             <p className="text-xs text-parchment-300 leading-relaxed">
-              Purchasing ₹2,000 worth of products unlocks a new binary tree and generates an exclusive referral code upon admin approval.
+              Start as many binary trees as you want! The next tree unlocks when you make another purchase over ₹2,000 AND your before tree has completed its 2 direct referrals and Level 1.
             </p>
           </div>
         </div>

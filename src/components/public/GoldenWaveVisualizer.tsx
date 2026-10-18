@@ -1,6 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
-
-type WaveMode = 'curve' | 'flat' | 'ramp';
+import React, { useEffect, useRef } from 'react';
 
 interface GoldenWaveVisualizerProps {
   className?: string;
@@ -9,11 +7,9 @@ interface GoldenWaveVisualizerProps {
 
 export const GoldenWaveVisualizer: React.FC<GoldenWaveVisualizerProps> = ({
   className = '',
-  showControls = true,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [activeMode, setActiveMode] = useState<WaveMode>('curve');
   const animationFrameId = useRef<number | null>(null);
   const startTimeRef = useRef<number>(performance.now());
 
@@ -54,11 +50,10 @@ export const GoldenWaveVisualizer: React.FC<GoldenWaveVisualizerProps> = ({
       const numBars = Math.max(10, Math.floor(width / targetBarWidth));
       const actualBarWidth = width / numBars;
 
-      // Pure fixed center at 0.5 (no cursor influence)
+      // Fixed center at 0.5
       const fixedCenter = 0.5;
 
       // The center moves up and down like waves (harmonic oscillation)
-      // centerPeak: normalized vertical crest position in [0.18, 0.42] (higher up on screen)
       const centerPeak = 0.26 + 0.12 * Math.sin(elapsed * 1.5) + 0.04 * Math.sin(elapsed * 2.7);
 
       // Phase for wave ripple propagation
@@ -68,38 +63,21 @@ export const GoldenWaveVisualizer: React.FC<GoldenWaveVisualizerProps> = ({
         const u = i / (numBars - 1); // 0.0 (left) to 1.0 (right)
         const x = i * actualBarWidth;
 
-        // Calculate normalized crest position 'c' along this column (0.0 = top, 1.0 = bottom)
-        let c = 0.5;
+        // Default Curve: Bell curve where the center moves up and down like waves, tapering to sides
+        const dist = Math.abs(u - fixedCenter);
+        const bell = Math.exp(-Math.pow(dist / 0.30, 2));
 
-        if (activeMode === 'curve') {
-          // Bell curve where the center moves up and down like waves, tapering to sides
-          const dist = Math.abs(u - fixedCenter);
-          const bell = Math.exp(-Math.pow(dist / 0.30, 2));
+        // Traveling harmonic ripple waves
+        const ripple = 0.08 * Math.sin(dist * 14 - wavePhase);
+        const ambientWave = 0.04 * Math.cos(u * 8 + elapsed * 1.2);
 
-          // Traveling harmonic ripple waves
-          const ripple = 0.08 * Math.sin(dist * 14 - wavePhase);
-          const ambientWave = 0.04 * Math.cos(u * 8 + elapsed * 1.2);
-
-          const baseSide = 0.78;
-          c = baseSide - (bell * (baseSide - centerPeak)) + (ripple * bell) + ambientWave * (1 - bell * 0.5);
-        } else if (activeMode === 'flat') {
-          // Continuous undulating wave spanning the whole width
-          const wave1 = 0.12 * Math.sin(u * 9 - wavePhase);
-          const wave2 = 0.07 * Math.cos(u * 16 + elapsed * 1.8);
-          const centerSwell = 0.10 * Math.sin(elapsed * 1.8) * Math.exp(-Math.pow((u - 0.5) / 0.4, 2));
-          c = 0.46 + wave1 + wave2 + centerSwell;
-        } else if (activeMode === 'ramp') {
-          // Ascending ramp wave with rolling crest
-          const rampBase = 0.70 - 0.46 * u;
-          const undulatingWave = 0.10 * Math.sin(u * 10 - wavePhase);
-          const centerPulse = 0.08 * Math.sin(elapsed * 2.0) * Math.sin(u * Math.PI);
-          c = rampBase + undulatingWave + centerPulse;
-        }
+        const baseSide = 0.78;
+        const rawC = baseSide - (bell * (baseSide - centerPeak)) + (ripple * bell) + ambientWave * (1 - bell * 0.5);
 
         // Clamp c safely within visible range
-        c = Math.max(0.08, Math.min(0.92, c));
+        const c = Math.max(0.08, Math.min(0.92, rawC));
 
-        // Create linear gradient along the entire height of this column (covers whole section)
+        // Create linear gradient along the entire height of this column
         const gradient = ctx.createLinearGradient(x, 0, x, height);
 
         const stops: { offset: number; color: string }[] = [
@@ -150,7 +128,7 @@ export const GoldenWaveVisualizer: React.FC<GoldenWaveVisualizerProps> = ({
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [activeMode]);
+  }, []);
 
   return (
     <div
@@ -165,26 +143,6 @@ export const GoldenWaveVisualizer: React.FC<GoldenWaveVisualizerProps> = ({
           filter: 'drop-shadow(0 0 35px rgba(245, 158, 11, 0.25))',
         }}
       />
-
-      {/* Pill Buttons as shown in user reference image: Curve / Flat / Ramp */}
-      {showControls && (
-        <div className="absolute bottom-6 left-6 sm:left-10 z-20 flex items-center gap-2 pointer-events-auto">
-          {(['curve', 'flat', 'ramp'] as WaveMode[]).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => setActiveMode(mode)}
-              className={`px-4 py-1.5 rounded-full text-xs font-mono font-medium tracking-wider transition-all duration-200 cursor-pointer backdrop-blur-md ${
-                activeMode === mode
-                  ? 'bg-amberfox text-noir-950 font-bold shadow-amber-glow border border-amberfox'
-                  : 'bg-noir-900/85 hover:bg-noir-850 text-parchment-200 hover:text-amberfox border border-amberfox/30 hover:border-amberfox/70'
-              }`}
-            >
-              {mode === 'curve' ? 'Curve' : mode === 'flat' ? 'Flat' : 'Ramp'}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 };

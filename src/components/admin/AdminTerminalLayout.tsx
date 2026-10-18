@@ -44,13 +44,13 @@ export const AdminTerminalLayout: React.FC<AdminTerminalLayoutProps> = ({
   const navItems: { id: AdminTab; label: string; icon: React.ReactNode; badge?: string }[] = [
     { id: 'analytics', label: '1. Analytics & Overview', icon: <BarChart3 className="w-4 h-4" /> },
     { id: 'trees', label: '2. Tree Management', icon: <GitBranch className="w-4 h-4" /> },
-    { id: 'waiting', label: '3. Waiting Bench', icon: <Clock className="w-4 h-4" />, badge: '3 Spillover' },
+    { id: 'waiting', label: '3. Waiting Bench', icon: <Clock className="w-4 h-4" /> },
     { id: 'users', label: '4. All Users Directory', icon: <Users className="w-4 h-4" /> },
-    { id: 'payments', label: '5. Payments Approval', icon: <CreditCard className="w-4 h-4" />, badge: '3 Pending' },
+    { id: 'payments', label: '5. Payments Approval', icon: <CreditCard className="w-4 h-4" /> },
     { id: 'withdrawals', label: '6. Withdrawals Payouts', icon: <Wallet className="w-4 h-4" /> },
     { id: 'products', label: '7. Products & Inventory', icon: <Package className="w-4 h-4" /> },
     { id: 'wallet', label: '8. Reward Engine & Audit', icon: <FileSpreadsheet className="w-4 h-4" /> },
-    { id: 'audit-log', label: '9. System Audit Log', icon: <ShieldAlert className="w-4 h-4" />, badge: 'Accountability' },
+    { id: 'audit-log', label: '9. System Audit Log', icon: <ShieldAlert className="w-4 h-4" /> },
   ];
 
   // Helper to normalize tab aliases
@@ -117,7 +117,7 @@ export const AdminTerminalLayout: React.FC<AdminTerminalLayoutProps> = ({
       {/* Main Body */}
       <div className="flex-1 flex flex-col md:flex-row">
         {/* Left Sidebar */}
-        <aside className="w-full md:w-64 bg-noir-950 md:border-r border-b md:border-b-0 border-amberfox/15 p-4 flex flex-col justify-between shrink-0">
+        <aside className="w-full md:w-72 lg:w-80 bg-noir-950 md:border-r border-b md:border-b-0 border-amberfox/15 p-4 flex flex-col justify-between shrink-0 overflow-x-hidden">
           <div>
             <span className="text-[10px] uppercase font-mono tracking-luxury text-amberfox font-semibold block px-3 py-2">
               SYSTEM COMMAND

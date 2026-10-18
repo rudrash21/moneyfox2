@@ -14,6 +14,7 @@ export interface BinaryNodeData {
   parentCode?: string;
   parentName?: string;
   branchSide?: 'left' | 'right';
+  isAvailableSlot?: boolean;
   left?: BinaryNodeData;
   right?: BinaryNodeData;
 }
@@ -171,6 +172,32 @@ const TreeNodeRecursiveItem: React.FC<{
 
   // Render node card styled according to depth with guaranteed min-width and no shrinking
   const renderCard = () => {
+    if (node.isAvailableSlot) {
+      const sizeClass =
+        depth === 0
+          ? 'w-40 h-40 min-w-[160px] min-h-[160px]'
+          : depth === 1
+          ? 'w-34 h-34 min-w-[136px] min-h-[136px]'
+          : depth === 2
+          ? 'w-28 h-28 min-w-[112px] min-h-[112px]'
+          : 'w-24 h-24 min-w-[96px] min-h-[96px]';
+      return (
+        <div
+          onClick={() => onNodeClick(node)}
+          className={`rounded-full bg-noir-950/80 border-2 border-dashed border-amberfox/40 hover:border-amberfox/80 p-2 text-center ${sizeClass} shrink-0 transition-transform duration-150 hover:scale-105 cursor-pointer group flex flex-col items-center justify-center relative z-10 select-none shadow-[0_0_10px_rgba(0,0,0,0.5)]`}
+          title={`Available Slot under ${node.parentName || 'Parent'}`}
+        >
+          <span className="text-[7px] font-mono text-parchment-400 font-semibold uppercase tracking-wider mb-0.5">
+            {node.tag || 'AVAILABLE'}
+          </span>
+          <div className="font-serif text-[10px] font-semibold text-parchment-300 uppercase tracking-wide group-hover:text-amberfox transition-colors mt-0.5">
+            Available Slot
+          </div>
+          <p className="font-mono text-[7px] text-parchment-500 mt-0.5">Unplaced</p>
+        </div>
+      );
+    }
+
     if (depth === 0) {
       return (
         <div
@@ -363,11 +390,17 @@ export const NineLevelBinaryTree: React.FC<NineLevelBinaryTreeProps> = ({
   isDashboard = false,
   customRootNode,
 }) => {
-  const [selectedDepth, setSelectedDepth] = useState<number>(9);
+  const [selectedDepth, setSelectedDepth] = useState<number>(1);
   const [focusedNodePath, setFocusedNodePath] = useState<BinaryNodeData[]>([
     customRootNode || FULL_NINE_LEVEL_TREE,
   ]);
-  const [zoomScale, setZoomScale] = useState<number>(DEFAULT_ZOOM_PER_LEVEL[9] || 0.1);
+
+  useEffect(() => {
+    if (customRootNode) {
+      setFocusedNodePath([customRootNode]);
+    }
+  }, [customRootNode]);
+  const [zoomScale, setZoomScale] = useState<number>(DEFAULT_ZOOM_PER_LEVEL[1] || 1.0);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 40 });
   const [isDraggingState, setIsDraggingState] = useState<boolean>(false);
   const [selectedNodeModal, setSelectedNodeModal] = useState<BinaryNodeData | null>(null);
@@ -822,20 +855,38 @@ export const NineLevelBinaryTree: React.FC<NineLevelBinaryTreeProps> = ({
             </div>
 
             <div className="bg-noir-900 border border-amberfox/20 p-3.5 rounded-lg space-y-2 text-xs">
-              {selectedNodeModal.parentName && (
-                <div className="flex justify-between text-parchment-300">
-                  <span>Direct Referrer:</span>
-                  <span className="text-parchment-100 font-medium">
-                    {selectedNodeModal.parentName} ({selectedNodeModal.parentCode})
-                  </span>
-                </div>
+              {selectedNodeModal.isAvailableSlot ? (
+                <>
+                  <p className="text-parchment-300 leading-relaxed">
+                    This position is an <span className="text-amberfox font-semibold">Available Slot</span>. Members who register and place under your referral link will appear here.
+                  </p>
+                  {selectedNodeModal.parentName && (
+                    <div className="flex justify-between text-parchment-400 text-[11px] pt-1 border-t border-amberfox/15">
+                      <span>Upline Sponsor Node:</span>
+                      <span className="text-parchment-200 font-medium">
+                        {selectedNodeModal.parentName} ({selectedNodeModal.parentCode})
+                      </span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {selectedNodeModal.parentName && (
+                    <div className="flex justify-between text-parchment-300">
+                      <span>Direct Referrer:</span>
+                      <span className="text-parchment-100 font-medium">
+                        {selectedNodeModal.parentName} ({selectedNodeModal.parentCode})
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-parchment-300">
+                    <span>Downline Status:</span>
+                    <span className="text-parchment-100 font-bold">
+                      {selectedNodeModal.left && selectedNodeModal.right ? '2 / 2 Filled' : 'Open Spillover Slots'}
+                    </span>
+                  </div>
+                </>
               )}
-              <div className="flex justify-between text-parchment-300">
-                <span>Downline Status:</span>
-                <span className="text-parchment-100 font-bold">
-                  {selectedNodeModal.left && selectedNodeModal.right ? '2 / 2 Filled' : 'Open Spillover Slots'}
-                </span>
-              </div>
             </div>
 
             <div className="pt-2 flex gap-3">
