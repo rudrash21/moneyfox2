@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, ArrowLeft, ExternalLink, Check, Sparkles, ShieldCheck, Eye } from 'lucide-react';
-import { INITIAL_PRODUCTS } from '../../data/mockData';
+import { ChevronRight, ArrowLeft, ExternalLink, Check, Sparkles, ShieldCheck, Eye, ShoppingBag } from 'lucide-react';
+import { dbService, dbProductToProduct } from '../../lib/dbService';
 import { ScreenView, Product } from '../../types';
 
 interface ProductDetailProps {
@@ -18,10 +18,29 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
   selectedProductId,
   onSelectProduct,
 }) => {
-  const [currentId, setCurrentId] = useState<string>(selectedProductId || initialProductId || 'chill-black');
+  const [productsList, setProductsList] = useState<Product[]>([]);
+  const [currentId, setCurrentId] = useState<string>(selectedProductId || initialProductId || '');
   const [selectedSize, setSelectedSize] = useState<'S' | 'M' | 'L' | 'XL'>('L');
   const [activeAngle, setActiveAngle] = useState<'front' | 'back' | 'left' | 'right'>('front');
   const [showSizeGuide, setShowSizeGuide] = useState<boolean>(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const load = async () => {
+      const dbProds = await dbService.fetchProducts();
+      if (isMounted) {
+        const mapped = dbProds.map(dbProductToProduct);
+        setProductsList(mapped);
+        if (mapped.length > 0 && !currentId) {
+          setCurrentId(mapped[0].id);
+        }
+      }
+    };
+    load();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (selectedProductId) {
@@ -29,7 +48,26 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
     }
   }, [selectedProductId]);
 
-  const product: Product = INITIAL_PRODUCTS.find((p) => p.id === currentId) || INITIAL_PRODUCTS[0];
+  const product: Product = productsList.find((p) => p.id === currentId) || productsList[0] || {
+    id: currentId || 'prod-1',
+    name: 'MoneyFox Heavyweight Tee',
+    series: 'Streetwear Series · 001',
+    lot: 'Lot #MF-240 • Obsidian Noir',
+    gsm: 240,
+    price: 2000,
+    taxablePrice: 1785.71,
+    gstAmount: 214.29,
+    color: 'Obsidian Noir',
+    editionTag: 'Noir Edition',
+    image: '/images/products/chill-black/front.jpg',
+    thumbnails: ['/images/products/chill-black/front.jpg'],
+    description: 'Architectural oversized silhouette in 240 GSM luxury combed cotton.',
+    details: ['240 GSM luxury combed cotton jersey', 'Drop-shoulder boxy drape', 'GST Invoiced'],
+    specs: 'HSN 6109',
+    sizes: ['S', 'M', 'L', 'XL'],
+    availableSizes: ['S', 'M', 'L', 'XL'],
+  };
+
 
   const handleSwitchProduct = (id: string) => {
     setCurrentId(id);
@@ -156,12 +194,9 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
               <div>
                 <span className="font-serif text-3xl sm:text-4xl text-amberfox font-bold">₹{product.price.toLocaleString('en-IN')}</span>
                 <span className="text-xs font-mono text-parchment-400 block mt-0.5">
-                  Tax Invoiced (HSN 6109 • 12% GST Included)
+                  Tax Invoiced (HSN 6109 • GST Included)
                 </span>
               </div>
-              <span className="px-3 py-1 bg-amberfox/15 border border-amberfox text-amberfox font-mono text-xs font-bold rounded-lg uppercase">
-                Direct Selling Drop
-              </span>
             </div>
 
             {/* Size Selector */}
@@ -215,14 +250,15 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
             <div className="space-y-2 pt-2">
               <button
                 onClick={() => onAddToCartAndProceed(currentId, selectedSize)}
-                className="w-full btn-gold-sheen text-noir-950 py-4 text-xs sm:text-sm uppercase font-bold tracking-luxury flex items-center justify-center shadow-amber-glow cursor-pointer rounded-xl"
+                className="w-full btn-gold-sheen text-noir-950 py-4 text-xs sm:text-sm uppercase font-bold tracking-luxury flex items-center justify-center shadow-amber-glow cursor-pointer rounded-xl gap-2"
               >
-                <span>ACQUIRE {product.editionTag?.toUpperCase()} ({selectedSize}) — ₹2,000</span>
-                <ChevronRight className="w-4 h-4 ml-1.5" />
+                <ShoppingBag className="w-4 h-4" />
+                <span>ADD TO CART ({selectedSize}) — ₹{product.price.toLocaleString('en-IN')}</span>
+                <ChevronRight className="w-4 h-4" />
               </button>
               <div className="text-center">
                 <span className="inline-block px-3 py-1 bg-noir-900 text-parchment-400 font-mono text-[10px] border border-amberfox/20 rounded-md uppercase tracking-luxury">
-                  Qualifies for 9-Level Binary Tree Node &amp; ₹1,53,300 Matrix Potential
+                  Free Nationwide Express Delivery • Official GST Invoice
                 </span>
               </div>
             </div>
@@ -267,12 +303,12 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
             All Qualifying Streetwear Drops
           </h2>
           <p className="text-xs sm:text-sm text-parchment-300 mt-3 font-light leading-relaxed">
-            Every garment purchase above <strong className="text-amberfox">₹2,000</strong> qualifies you in the binary tree and activates commission eligibility. Click any edition below to inspect its 4 camera angles.
+            Every garment purchase includes free nationwide delivery and official tax invoice. Click any edition below to inspect its angles.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {INITIAL_PRODUCTS.map((prod) => {
+          {productsList.map((prod) => {
             const isCurrentlyInspected = prod.id === currentId;
             const displayImage = prod.angles?.front || prod.image;
 
@@ -288,10 +324,10 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
                 {/* Card Top Pill & GSM Tag */}
                 <div className="flex items-center justify-between pb-3 text-xs font-mono">
                   <span className="text-amberfox font-bold uppercase tracking-wider text-[11px]">
-                    {prod.editionTag}
+                    {prod.editionTag || prod.name}
                   </span>
                   <span className="px-2 py-0.5 bg-amberfox/15 text-amberfox border border-amberfox/30 text-[10px] font-bold rounded uppercase">
-                    240 GSM
+                    {prod.gsm || 240} GSM
                   </span>
                 </div>
 
@@ -310,7 +346,7 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
                   />
                   <div className="absolute bottom-2.5 right-2.5 bg-noir-950/85 text-parchment-200 px-2 py-0.5 font-mono text-[9px] uppercase rounded border border-amberfox/20 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Eye className="w-3 h-3 text-amberfox" />
-                    <span>Inspect 4 Angles</span>
+                    <span>Inspect Angles</span>
                   </div>
                 </div>
 
@@ -337,13 +373,10 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
                   {/* Features Chips */}
                   <div className="flex flex-wrap gap-1.5 pt-1 text-[10px] font-mono text-parchment-300">
                     <span className="px-2 py-0.5 bg-noir-950 border border-amberfox/15 rounded">
-                      ✓ Commission Qualified
-                    </span>
-                    <span className="px-2 py-0.5 bg-noir-950 border border-amberfox/15 rounded">
                       ✓ Free Express Shipping
                     </span>
                     <span className="px-2 py-0.5 bg-noir-950 border border-amberfox/15 rounded">
-                      ✓ 12% GST Invoice
+                      ✓ Official GST Invoiced
                     </span>
                   </div>
 
@@ -373,10 +406,10 @@ export const ProductDetailView: React.FC<ProductDetailProps> = ({
                       <button
                         type="button"
                         onClick={() => onAddToCartAndProceed(prod.id, selectedSize)}
-                        className="btn-gold-sheen text-noir-950 px-3.5 py-2 text-xs font-bold font-mono uppercase tracking-wider rounded-lg shadow-amber-glow cursor-pointer flex items-center gap-1"
+                        className="btn-gold-sheen text-noir-950 px-3.5 py-2 text-xs font-bold font-mono uppercase tracking-wider rounded-lg shadow-amber-glow cursor-pointer flex items-center gap-1.5"
                       >
-                        <span>Acquire</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                        <span>Add to Cart</span>
                       </button>
                     </div>
                   </div>

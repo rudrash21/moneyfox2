@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, ArrowRight, Trash2, Edit3, ShoppingBag } from 'lucide-react';
-import { BRAND_ASSETS, INITIAL_PRODUCTS } from '../../data/mockData';
+import { BRAND_ASSETS } from '../../data/mockData';
+import { dbService, dbProductToProduct } from '../../lib/dbService';
 import { ScreenView } from '../../types';
 
 interface CartOrderReviewProps {
@@ -26,11 +27,36 @@ export const CartOrderReview: React.FC<CartOrderReviewProps> = ({
 }) => {
   const [isEditingSize, setIsEditingSize] = useState<boolean>(false);
   const [isEmptyCart, setIsEmptyCart] = useState<boolean>(false);
+  const [productsList, setProductsList] = useState<any[]>([]);
 
-  const product = INITIAL_PRODUCTS.find((p) => p.id === selectedProductId) || INITIAL_PRODUCTS[0];
-  const garmentImage = product.angles?.front || product.image;
-  const editionLabel = `${product.series.toUpperCase()} • ${product.gsm} GSM`;
+  React.useEffect(() => {
+    let isMounted = true;
+    dbService.fetchProducts().then((res) => {
+      if (isMounted) {
+        setProductsList(res.map(dbProductToProduct));
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const product = productsList.find((p) => p.id === selectedProductId) || productsList[0] || {
+    id: selectedProductId || 'prod-1',
+    name: 'MoneyFox Heavyweight Tee',
+    series: 'Streetwear Drop · 001',
+    gsm: 240,
+    price: 2000,
+    taxablePrice: 1785.71,
+    gstAmount: 214.29,
+    image: '/images/products/chill-black/front.jpg',
+    thumbnails: ['/images/products/chill-black/front.jpg'],
+    angles: { front: '/images/products/chill-black/front.jpg' },
+  };
+  const garmentImage = product.angles?.front || product.image || '/images/products/chill-black/front.jpg';
+  const editionLabel = `${(product.series || 'Streetwear').toUpperCase()} • ${product.gsm || 240} GSM`;
   const editionTitle = product.name;
+
 
   if (cartCount === 0 || isEmptyCart) {
     return (

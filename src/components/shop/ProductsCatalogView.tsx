@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Filter, 
   ChevronRight, 
@@ -11,9 +11,10 @@ import {
   X, 
   Eye, 
   ArrowUpDown, 
-  Check 
+  Check,
+  ShoppingBag
 } from 'lucide-react';
-import { INITIAL_PRODUCTS } from '../../data/mockData';
+import { dbService, dbProductToProduct } from '../../lib/dbService';
 import { ScreenView, Product } from '../../types';
 
 interface ProductsCatalogViewProps {
@@ -29,12 +30,39 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
   onSelectProductAndBuy,
   onViewProductDetail,
 }) => {
+  // Live dynamic products
+  const [productsList, setProductsList] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const load = async () => {
+      setLoading(true);
+      const dbProds = await dbService.fetchProducts();
+      if (isMounted) {
+        setProductsList(dbProds.map(dbProductToProduct));
+        setLoading(false);
+      }
+    };
+    load();
+
+    const unsub = dbService.subscribeProducts((fresh) => {
+      if (isMounted) {
+        setProductsList(fresh.map(dbProductToProduct));
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      unsub();
+    };
+  }, []);
+
   // Filter States
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-  const [maxPrice, setMaxPrice] = useState<number>(3000);
-  const [onlyCommissionEligible, setOnlyCommissionEligible] = useState<boolean>(false);
+  const [maxPrice, setMaxPrice] = useState<number>(5000);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortOption, setSortOption] = useState<SortOption>('relevance');
   const [wishlist, setWishlist] = useState<Record<string, boolean>>({});
@@ -46,28 +74,36 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
     setWishlist((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Color options extracted from products
-  const colorOptions = [
+  // Color options
+  const colorOptions = useMemo(() => [
     { id: 'black', label: 'Obsidian Noir', hex: '#0D0D0D' },
     { id: 'plum', label: 'Royal Plum', hex: '#4A2346' },
     { id: 'navy', label: 'Deep Sea Navy', hex: '#16233B' },
-  ];
+    { id: 'white', label: 'Chalk White', hex: '#E6E6E6' },
+  ], []);
 
-  // Category options
-  const categoryOptions = [
-    { id: 'all', label: 'All Streetwear Drops', count: INITIAL_PRODUCTS.length },
-    { id: 'cyber', label: 'Cyber Series', count: 1 },
-    { id: 'typographic', label: 'Typographic Archive', count: 2 },
-    { id: 'dripping', label: 'Dripping Smiley Editions', count: 2 },
-  ];
+  // Dynamic Category options extracted from products
+  const categoryOptions = useMemo(() => {
+    const list = [
+      { id: 'all', label: 'All Streetwear Drops', count: productsList.length },
+    ];
+    const catMap = new Map<string, number>();
+    productsList.forEach((p) => {
+      const cat = p.series || 'Streetwear';
+      catMap.set(cat, (catMap.get(cat) || 0) + 1);
+    });
+    catMap.forEach((count, cat) => {
+      list.push({ id: cat, label: cat, count });
+    });
+    return list;
+  }, [productsList]);
 
   // Reset all filters
   const handleClearFilters = () => {
     setSelectedCategory('all');
     setSelectedColors([]);
     setSelectedSizes([]);
-    setMaxPrice(3000);
-    setOnlyCommissionEligible(false);
+    setMaxPrice(5000);
     setSearchQuery('');
   };
 
@@ -75,27 +111,26 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
     selectedCategory !== 'all' || 
     selectedColors.length > 0 || 
     selectedSizes.length > 0 || 
-    maxPrice < 3000 || 
-    onlyCommissionEligible || 
+    maxPrice < 5000 || 
     searchQuery.trim() !== '';
 
   // Filtered & Sorted products
   const filteredProducts = useMemo(() => {
-    return INITIAL_PRODUCTS.filter((prod) => {
+    return productsList.filter((prod) => {
       // Search query
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchesName = prod.name.toLowerCase().includes(query);
-        const matchesSeries = prod.series.toLowerCase().includes(query);
+        const matchesSeries = (prod.series || '').toLowerCase().includes(query);
         const matchesTag = (prod.editionTag || '').toLowerCase().includes(query);
         const matchesColor = (prod.color || '').toLowerCase().includes(query);
         if (!matchesName && !matchesSeries && !matchesTag && !matchesColor) return false;
       }
 
       // Category filter
-      if (selectedCategory === 'cyber' && !prod.id.includes('chill')) return false;
-      if (selectedCategory === 'typographic' && !prod.id.includes('corner')) return false;
-      if (selectedCategory === 'dripping' && !prod.id.includes('better')) return false;
+      if (selectedCategory !== 'all' && prod.series !== selectedCategory) {
+        return false;
+      }
 
       // Color filter
       if (selectedColors.length > 0) {
@@ -104,7 +139,8 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
           if (c === 'black') return prodColor.includes('black') || prodColor.includes('noir');
           if (c === 'plum') return prodColor.includes('plum');
           if (c === 'navy') return prodColor.includes('navy');
-          return false;
+          if (c === 'white') return prodColor.includes('white') || prodColor.includes('chalk');
+          return prodColor.includes(c);
         });
         if (!matchesColor) return false;
       }
@@ -112,23 +148,20 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
       // Price filter
       if (prod.price > maxPrice) return false;
 
-      // Commission qualification filter
-      if (onlyCommissionEligible && prod.price < 2000) return false;
-
       return true;
     }).sort((a, b) => {
       if (sortOption === 'price-asc') return a.price - b.price;
       if (sortOption === 'price-desc') return b.price - a.price;
       if (sortOption === 'newest') return b.id.localeCompare(a.id);
-      if (sortOption === 'popularity') return b.name.length - a.name.length; // deterministic order
+      if (sortOption === 'popularity') return b.name.length - a.name.length;
       return 0; // relevance
     });
-  }, [selectedCategory, selectedColors, maxPrice, onlyCommissionEligible, searchQuery, sortOption]);
+  }, [productsList, selectedCategory, selectedColors, maxPrice, searchQuery, sortOption]);
 
   return (
     <div className="bg-noir-950 text-parchment-100 min-h-screen pb-24">
-      {/* Top Header / Breadcrumbs Bar */}
-      <div className="border-b border-amberfox/15 bg-noir-900/80 backdrop-blur-md py-3.5 sm:py-4 sticky top-16 sm:top-20 z-30">
+      {/* Top Header / Breadcrumbs Bar - Non-sticky to eliminate gap and avoid covering content */}
+      <div className="border-b border-amberfox/15 bg-noir-900/90 py-3 sm:py-3.5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-4">
             {/* Breadcrumbs */}
@@ -145,15 +178,8 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
               <span className="text-amberfox font-semibold">ALL PRODUCTS</span>
             </div>
 
-            {/* Quick Stats Banner */}
+            {/* Mobile Filters Trigger */}
             <div className="flex items-center gap-3">
-              <div className="bg-noir-900/90 border border-amberfox/20 rounded-xl px-3.5 py-2 flex items-center gap-2.5">
-                <Sparkles className="w-4 h-4 text-amberfox" />
-                <div className="text-left">
-                  <div className="text-[10px] font-mono uppercase text-parchment-400">Direct Selling</div>
-                  <div className="text-xs font-mono font-bold text-amberfox">Verified Direct Drop</div>
-                </div>
-              </div>
               <button
                 onClick={() => setMobileFilterOpen(true)}
                 className="lg:hidden flex items-center gap-2 bg-amberfox text-noir-950 px-3 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider cursor-pointer shadow-amber-glow"
@@ -167,12 +193,12 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
         </div>
       </div>
 
-      {/* Main Container with Sidebar + Product Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      {/* Main Container with Sidebar + Product Grid (Tight top spacing) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* ================= LEFT SIDEBAR (FILTERS - FLIPKART STYLE IN WEBSITE NOIR THEME) ================= */}
-          <aside className="hidden lg:block lg:col-span-3 space-y-6 sticky top-36">
+          {/* ================= LEFT SIDEBAR (FILTERS - PROPERLY ADJUSTED AT STICKY TOP-24) ================= */}
+          <aside className="hidden lg:block lg:col-span-3 space-y-6 sticky top-24">
             <div className="bg-noir-900/95 border border-amberfox/25 rounded-2xl p-5 shadow-2xl backdrop-blur-xl">
               {/* Header */}
               <div className="flex items-center justify-between pb-4 border-b border-amberfox/15">
@@ -303,36 +329,15 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
                 </div>
               </div>
 
-              {/* Qualifiers & Guarantees */}
-              <div className="pt-4 space-y-2.5">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-parchment-400 font-bold block">
-                  COMMISSION QUALIFICATION
-                </span>
-                <label
-                  className="flex items-center space-x-2.5 cursor-pointer text-xs text-parchment-300 hover:text-parchment-100"
-                  onClick={() => setOnlyCommissionEligible(!onlyCommissionEligible)}
-                >
-                  <div
-                    className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
-                      onlyCommissionEligible
-                        ? 'bg-amberfox border-amberfox text-noir-950'
-                        : 'border-amberfox/40 bg-noir-850'
-                    }`}
-                  >
-                    {onlyCommissionEligible && <Check className="w-3 h-3 stroke-[3]" />}
-                  </div>
-                  <span className="font-mono text-[11px] text-amberfox font-semibold">Commission Qualified Only</span>
-                </label>
-
-                <div className="pt-2 text-[10px] font-mono text-parchment-500 space-y-1">
-                  <div className="flex items-center gap-1.5 text-parchment-400">
-                    <Truck className="w-3.5 h-3.5 text-amberfox" />
-                    <span>Free Nationwide Express Delivery</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-parchment-400">
-                    <ShieldCheck className="w-3.5 h-3.5 text-amberfox" />
-                    <span>Official 12% GST Tax Invoiced</span>
-                  </div>
+              {/* Delivery & Tax Guarantees */}
+              <div className="pt-4 border-t border-amberfox/15 text-[10px] font-mono text-parchment-400 space-y-2">
+                <div className="flex items-center gap-2 text-parchment-300">
+                  <Truck className="w-3.5 h-3.5 text-amberfox" />
+                  <span>Free Nationwide Express Delivery</span>
+                </div>
+                <div className="flex items-center gap-2 text-parchment-300">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amberfox" />
+                  <span>Official GST Tax Invoiced</span>
                 </div>
               </div>
             </div>
@@ -349,7 +354,7 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
                 <div className="flex items-center gap-2">
                   <span className="text-xs sm:text-sm font-mono text-parchment-300">
                     Showing <strong className="text-amberfox font-bold">{filteredProducts.length}</strong> of{' '}
-                    <strong className="text-parchment-100">{INITIAL_PRODUCTS.length}</strong> drops
+                    <strong className="text-parchment-100">{productsList.length}</strong> drops
                   </span>
                   {hasActiveFilters && (
                     <span className="px-2 py-0.5 bg-amberfox/10 text-amberfox border border-amberfox/30 rounded text-[10px] font-mono">
@@ -414,16 +419,22 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
             {filteredProducts.length === 0 ? (
               <div className="bg-noir-900/60 border border-amberfox/20 rounded-2xl p-12 text-center space-y-4">
                 <Sparkles className="w-10 h-10 text-amberfox/40 mx-auto" />
-                <h3 className="font-serif text-lg text-parchment-200 uppercase">No Matching Streetwear Drops Found</h3>
+                <h3 className="font-serif text-lg text-parchment-200 uppercase">
+                  {productsList.length === 0 ? 'Streetwear Vault Is Currently Empty' : 'No Matching Streetwear Drops Found'}
+                </h3>
                 <p className="text-xs font-mono text-parchment-500 max-w-md mx-auto">
-                  Try clearing your filters or search criteria to see all official drops from the MoneyFox Products archive.
+                  {productsList.length === 0
+                    ? 'Exclusive garment drops will appear here once published in the Admin Products dashboard.'
+                    : 'Try clearing your filters or search criteria to see all drops.'}
                 </p>
-                <button
-                  onClick={handleClearFilters}
-                  className="btn-gold-sheen text-noir-950 px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider cursor-pointer"
-                >
-                  Reset All Filters
-                </button>
+                {hasActiveFilters && (
+                  <button
+                    onClick={handleClearFilters}
+                    className="btn-gold-sheen text-noir-950 px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider cursor-pointer"
+                  >
+                    Reset All Filters
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
@@ -487,7 +498,7 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
                           {/* Brand label */}
                           <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-parchment-400">
                             <span>MONEYFOX PRODUCTS</span>
-                            <span className="text-amberfox-gold">QUALIFIED DROP</span>
+                            <span className="text-amberfox font-semibold">{prod.editionTag || 'VERIFIED'}</span>
                           </div>
 
                           {/* Product Title */}
@@ -520,7 +531,7 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
                               <span>Free Delivery</span>
                             </span>
                             <span>•</span>
-                            <span className="text-parchment-400">12% GST Included</span>
+                            <span className="text-parchment-400">GST Tax Invoiced</span>
                           </div>
                         </div>
 
@@ -542,10 +553,10 @@ export const ProductsCatalogView: React.FC<ProductsCatalogViewProps> = ({
                               e.stopPropagation();
                               onSelectProductAndBuy(prod.id, 'L');
                             }}
-                            className="flex-1 btn-gold-sheen text-noir-950 py-2 text-xs font-bold font-mono uppercase tracking-wider rounded-xl shadow-amber-glow cursor-pointer flex items-center justify-center gap-1"
+                            className="flex-1 btn-gold-sheen text-noir-950 py-2 text-xs font-bold font-mono uppercase tracking-wider rounded-xl shadow-amber-glow cursor-pointer flex items-center justify-center gap-1.5"
                           >
-                            <span>Acquire</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
+                            <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
+                            <span>Add to Cart</span>
                           </button>
                         </div>
                       </div>

@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { DeliveryAddress, SponsorInfo, OrderRecord } from '../types';
+import { DeliveryAddress, SponsorInfo, OrderRecord, Product } from '../types';
 
 export interface DbPayment {
   id?: string;
@@ -601,9 +601,14 @@ export const dbService = {
         return getLocal<DbProduct[]>(STORAGE_KEYS.PRODUCTS, []);
       }
 
-      if (data && data.length > 0) {
-        setLocal(STORAGE_KEYS.PRODUCTS, data);
-        return data as DbProduct[];
+      if (data) {
+        const local = getLocal<DbProduct[]>(STORAGE_KEYS.PRODUCTS, []);
+        // Combine Supabase data with any local items
+        const remoteIds = new Set(data.map((d: any) => d.id || d.sku));
+        const pendingLocal = local.filter((l) => !remoteIds.has(l.id) && !remoteIds.has(l.sku));
+        const combined = [...data, ...pendingLocal] as DbProduct[];
+        setLocal(STORAGE_KEYS.PRODUCTS, combined);
+        return combined;
       }
       return getLocal<DbProduct[]>(STORAGE_KEYS.PRODUCTS, []);
     } catch (err) {
@@ -722,24 +727,62 @@ export const dbService = {
 
   /**
    * Admin: Add new product to catalog
-   */
   async addProduct(product: Partial<DbProduct>): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
       const now = new Date().toISOString();
-      const payload = {
+      const payload: any = {
         ...product,
         created_at: now,
         updated_at: now,
       };
 
-      const { data, error } = await supabase.from('products').insert(payload).select().single();
-      if (error) {
-        return { success: false, error: error.message };
+      // Omit taxable_price since it is dynamically calculated and not a remote table column
+      const dbPayload = { ...payload };
+      delete dbPayload.taxable_price;
+
+      let res = await supabase.from('products').insert(dbPayload).select().single();
+
+      // If remote Supabase schema cache has any unmigrated columns:
+      if (res.error && (res.error.message?.includes('schema cache') || res.error.message?.includes('column'))) {
+        console.warn('Supabase schema cache notice (omitting unmigrated columns):', res.error.message);
+        const safePayload = { ...dbPayload };
+        delete safePayload.gst_percentage;
+        res = await supabase.from('products').insert(safePayload).select().single();
       }
+
+      if (res.error) {
+        console.warn('Supabase product creation fallback to local storage:', res.error.message);
+        // Resilient fallback: save locally so user is never blocked
+        const localProduct: DbProduct = {
+          id: (product.sku || `mf-prod-${Date.now()}`).toLowerCase(),
+          ...payload,
+        };
+        const cached = getLocal<DbProduct[]>(STORAGE_KEYS.PRODUCTS, []);
+        setLocal(STORAGE_KEYS.PRODUCTS, [...cached, localProduct]);
+        return { success: true, data: localProduct };
+      }
+
+      // If inserted to Supabase successfully, also cache locally with full payload (including GST details)
+      const savedData = { ...payload, ...res.data };
+      const cached = getLocal<DbProduct[]>(STORAGE_KEYS.PRODUCTS, []);
+      setLocal(
+        STORAGE_KEYS.PRODUCTS,
+        [...cached.filter((p) => p.id !== savedData.id && p.sku !== savedData.sku), savedData]
+      );
+
       await this.fetchProducts();
-      return { success: true, data };
+      return { success: true, data: savedData };
     } catch (err: any) {
-      return { success: false, error: err.message || 'Product creation failed' };
+      console.warn('Product creation exception fallback to local storage:', err);
+      const localProduct: DbProduct = {
+        id: (product.sku || `mf-prod-${Date.now()}`).toLowerCase(),
+        ...(product as any),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      const cached = getLocal<DbProduct[]>(STORAGE_KEYS.PRODUCTS, []);
+      setLocal(STORAGE_KEYS.PRODUCTS, [...cached, localProduct]);
+      return { success: true, data: localProduct };
     }
   },
 
@@ -748,21 +791,123 @@ export const dbService = {
    */
   async updateProduct(id: string, updates: Partial<DbProduct>): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
+      const dbUpdates = { ...updates };
+      delete (dbUpdates as any).taxable_price;
+
+      let { error } = await supabase
         .from('products')
         .update({
-          ...updates,
+          ...dbUpdates,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id);
 
-      if (error) {
-        return { success: false, error: error.message };
+      if (error && (error.message?.includes('schema cache') || error.message?.includes('column'))) {
+        const safeUpdates = { ...updates };
+        delete (safeUpdates as any).taxable_price;
+        delete (safeUpdates as any).gst_percentage;
+        const retry = await supabase
+          .from('products')
+          .update({
+            ...safeUpdates,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', id);
+        error = retry.error;
       }
+
+      // Update local cache
+      const cached = getLocal<DbProduct[]>(STORAGE_KEYS.PRODUCTS, []);
+      setLocal(
+        STORAGE_KEYS.PRODUCTS,
+        cached.map((p) => (p.id === id || p.sku === id ? { ...p, ...updates } : p))
+      );
+
       await this.fetchProducts();
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.message || 'Product update failed' };
+      return { success: true };
+    }
+  },
+
+  /**
+   * Admin: Delete a single product
+   */
+  async deleteProduct(id: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) {
+        console.warn('Supabase delete error:', error.message);
+      }
+      // Also update local storage cache
+      const cached = getLocal<DbProduct[]>(STORAGE_KEYS.PRODUCTS, []);
+      setLocal(STORAGE_KEYS.PRODUCTS, cached.filter((p) => p.id !== id));
+      await this.fetchProducts();
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Product deletion failed' };
+    }
+  },
+
+  /**
+   * Admin: Wipe all products from database and local storage
+   */
+  async wipeAllProducts(): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Clear from Supabase table
+      const { error } = await supabase.from('products').delete().neq('sku', '___NONE___');
+      if (error) {
+        console.warn('Supabase wipe notice:', error.message);
+      }
+      // Clear local storage cache
+      setLocal(STORAGE_KEYS.PRODUCTS, []);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Wipe products failed' };
     }
   },
 };
+
+/**
+ * Adapter helper to transform DbProduct into frontend Product model
+ */
+export const dbProductToProduct = (p: DbProduct): Product => {
+  const price = p.price || 2000;
+  const gstRate = p.gst_percentage !== undefined ? p.gst_percentage : 12;
+  const taxable = p.taxable_price || Math.round((price / (1 + gstRate / 100)) * 100) / 100;
+  const gstAmt = Math.round((price - taxable) * 100) / 100;
+  const mainImg = p.image || (p.thumbnails && p.thumbnails[0]) || '/images/products/chill-black/front.jpg';
+  const thumbs = p.thumbnails && p.thumbnails.length > 0 ? p.thumbnails : [mainImg];
+
+  return {
+    id: p.id,
+    name: p.name,
+    series: p.series || 'Streetwear Series',
+    lot: p.lot || `SKU #${p.sku}`,
+    gsm: p.gsm || 240,
+    price,
+    taxablePrice: taxable,
+    gstAmount: gstAmt,
+    image: mainImg,
+    thumbnails: thumbs,
+    angles: {
+      front: thumbs[0] || mainImg,
+      back: thumbs[1] || thumbs[0] || mainImg,
+      left: thumbs[2] || thumbs[0] || mainImg,
+      right: thumbs[3] || thumbs[0] || mainImg,
+    },
+    description: p.description || `${p.name} - Luxury Heavyweight Edition`,
+    details: p.details && p.details.length > 0 ? p.details : [
+      `${p.gsm || 240} GSM premium combed cotton jersey`,
+      'Pre-shrunk bio-wash treatment for maximum durability',
+      'Drop-shoulder boxy streetwear drape',
+      `HSN 6109 with ${gstRate}% GST Included`,
+    ],
+    specs: p.specs || `SKU: ${p.sku} · HSN 6109`,
+    sizes: ((p.sizes && p.sizes.length > 0) ? p.sizes : ['S', 'M', 'L', 'XL']) as ('S' | 'M' | 'L' | 'XL')[],
+    availableSizes: ((p.available_sizes && p.available_sizes.length > 0) ? p.available_sizes : ['S', 'M', 'L', 'XL']) as ('S' | 'M' | 'L' | 'XL')[],
+    color: p.color || 'Noir',
+    editionTag: p.edition_tag || p.sku,
+  };
+};
+

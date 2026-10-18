@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, AlertTriangle, Package, RefreshCw, Plus, X, Layers, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Package, RefreshCw, Plus, X, Layers, ShieldCheck, Upload, Image as ImageIcon, Trash2, Percent } from 'lucide-react';
 import { dbService, DbProduct } from '../../lib/dbService';
 
 export const AdminProductsInventoryView: React.FC = () => {
@@ -20,6 +20,9 @@ export const AdminProductsInventoryView: React.FC = () => {
   const [newProductSku, setNewProductSku] = useState('');
   const [newProductSeries, setNewProductSeries] = useState('Cyber Streetwear Series · 002');
   const [newProductPrice, setNewProductPrice] = useState(2000);
+  const [newProductGst, setNewProductGst] = useState<number>(12);
+  const [newProductImage, setNewProductImage] = useState<string>('');
+  const [imageInputMode, setImageInputMode] = useState<'upload' | 'url'>('upload');
   const [newProductColor, setNewProductColor] = useState('Obsidian Black');
   const [newStockS, setNewStockS] = useState(20);
   const [newStockM, setNewStockM] = useState(25);
@@ -27,6 +30,7 @@ export const AdminProductsInventoryView: React.FC = () => {
   const [newStockXL, setNewStockXL] = useState(15);
   const [newProductStatus, setNewProductStatus] = useState<'Published' | 'Draft'>('Published');
   const [isAdding, setIsAdding] = useState(false);
+
 
   useEffect(() => {
     let isMounted = true;
@@ -112,19 +116,61 @@ export const AdminProductsInventoryView: React.FC = () => {
     }
   };
 
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image file size should be less than 5MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewProductImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleWipeAllProducts = async () => {
+    if (window.confirm('⚠️ WIPE OUT ALL PRODUCTS:\n\nAre you sure you want to delete all product records? This will clear all items from the catalog and inventory.')) {
+      setLoading(true);
+      await dbService.wipeAllProducts();
+      setProducts([]);
+      setSelectedProductId('');
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteProduct = async (prod: DbProduct) => {
+    if (window.confirm(`Delete product "${prod.name}" (${prod.sku})?`)) {
+      await dbService.deleteProduct(prod.id);
+      const fresh = await dbService.fetchProducts();
+      setProducts(fresh);
+      if (selectedProductId === prod.id) {
+        setSelectedProductId(fresh.length > 0 ? fresh[0].id : '');
+      }
+    }
+  };
+
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsAdding(true);
     const slug = newProductSku.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const gstRate = Number(newProductGst) || 0;
+    const taxablePrice = Math.round((newProductPrice / (1 + gstRate / 100)) * 100) / 100;
+    const finalImage = newProductImage.trim() || '/images/products/chill-black/front.jpg';
+
     const res = await dbService.addProduct({
       name: newProductName,
       sku: newProductSku.toUpperCase(),
       slug,
       series: newProductSeries,
       price: newProductPrice,
-      taxable_price: Math.round((newProductPrice / 1.12) * 100) / 100,
-      gst_percentage: 12,
+      taxable_price: taxablePrice,
+      gst_percentage: gstRate,
       color: newProductColor,
+      image: finalImage,
+      thumbnails: [finalImage],
       size_s_stock: Number(newStockS),
       size_m_stock: Number(newStockM),
       size_l_stock: Number(newStockL),
@@ -134,8 +180,8 @@ export const AdminProductsInventoryView: React.FC = () => {
       category: 'apparel',
       sizes: ['S', 'M', 'L', 'XL'],
       available_sizes: ['S', 'M', 'L', 'XL'],
-      description: `${newProductName} in luxury 240 GSM combed cotton. Direct Selling Registered.`,
-      specs: 'Direct Selling Registered · Binary Tree Node · HSN 6109',
+      description: `${newProductName} in luxury 240 GSM combed cotton.`,
+      specs: `SKU: ${newProductSku.toUpperCase()} · HSN 6109 · ${gstRate}% GST Included`,
     });
 
     setIsAdding(false);
@@ -143,6 +189,7 @@ export const AdminProductsInventoryView: React.FC = () => {
       setIsAddModalOpen(false);
       setNewProductName('');
       setNewProductSku('');
+      setNewProductImage('');
       const fresh = await dbService.fetchProducts();
       setProducts(fresh);
       if (res.data?.id) setSelectedProductId(res.data.id);
@@ -157,6 +204,7 @@ export const AdminProductsInventoryView: React.FC = () => {
     const fresh = await dbService.fetchProducts();
     setProducts(fresh);
   };
+
 
   const publishedCount = products.filter((p) => p.status === 'Published').length;
   const lowStockCount = products.filter(
@@ -180,13 +228,22 @@ export const AdminProductsInventoryView: React.FC = () => {
             Merchandise catalogue / Size-level stock / Reasoned adjustments &amp; Supabase realtime audit log.
           </p>
         </div>
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center gap-2 btn-gold-sheen text-noir-950 px-4 py-2.5 text-xs font-bold uppercase tracking-luxury cursor-pointer shadow-amber-glow"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Product</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleWipeAllProducts}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-mono font-bold uppercase tracking-luxury text-red-400 hover:text-red-300 border border-red-500/40 hover:border-red-500/70 bg-red-950/20 cursor-pointer transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Wipe Out Products</span>
+          </button>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex items-center gap-2 btn-gold-sheen text-noir-950 px-4 py-2.5 text-xs font-bold uppercase tracking-luxury cursor-pointer shadow-amber-glow"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New Product</span>
+          </button>
+        </div>
       </div>
 
       {/* 3 Metric Tiles */}
@@ -281,7 +338,7 @@ export const AdminProductsInventoryView: React.FC = () => {
                           >
                             {prod.status}
                           </span>
-                          <div>
+                          <div className="flex items-center justify-end gap-2">
                             <button
                               type="button"
                               onClick={(e) => {
@@ -291,6 +348,17 @@ export const AdminProductsInventoryView: React.FC = () => {
                               className="text-[9px] text-parchment-400 hover:text-amberfox uppercase underline tracking-wider"
                             >
                               Toggle State
+                            </button>
+                            <span className="text-parchment-600">•</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteProduct(prod);
+                              }}
+                              className="text-[9px] text-red-400 hover:text-red-300 uppercase underline tracking-wider"
+                            >
+                              Delete
                             </button>
                           </div>
                         </td>
@@ -532,7 +600,7 @@ export const AdminProductsInventoryView: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleAddProduct} className="space-y-4 font-mono text-xs">
+            <form onSubmit={handleAddProduct} className="space-y-4 font-mono text-xs max-h-[80vh] overflow-y-auto pr-1">
               <div>
                 <label className="block text-[11px] uppercase tracking-luxury text-parchment-400 mb-1">
                   Product Name *
@@ -545,6 +613,90 @@ export const AdminProductsInventoryView: React.FC = () => {
                   onChange={(e) => setNewProductName(e.target.value)}
                   className="w-full bg-noir-950 hairline-border p-3 text-parchment-100 focus:outline-none focus:border-amberfox"
                 />
+              </div>
+
+              {/* Product Image Section */}
+              <div className="p-3.5 bg-noir-950/80 border border-amberfox/20 rounded-xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] uppercase tracking-luxury text-amberfox font-bold flex items-center gap-1.5">
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    <span>Product Image</span>
+                  </label>
+                  <div className="flex items-center gap-1 bg-noir-900 border border-amberfox/20 p-0.5 rounded text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => setImageInputMode('upload')}
+                      className={`px-2 py-0.5 rounded cursor-pointer ${
+                        imageInputMode === 'upload' ? 'bg-amberfox text-noir-950 font-bold' : 'text-parchment-400'
+                      }`}
+                    >
+                      Upload File
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImageInputMode('url')}
+                      className={`px-2 py-0.5 rounded cursor-pointer ${
+                        imageInputMode === 'url' ? 'bg-amberfox text-noir-950 font-bold' : 'text-parchment-400'
+                      }`}
+                    >
+                      Image URL
+                    </button>
+                  </div>
+                </div>
+
+                {imageInputMode === 'upload' ? (
+                  <div>
+                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-amberfox/30 hover:border-amberfox/60 bg-noir-900/50 p-4 rounded-xl cursor-pointer transition-colors group">
+                      <Upload className="w-6 h-6 text-amberfox group-hover:scale-110 transition-transform mb-1.5" />
+                      <span className="text-[11px] text-parchment-200 font-bold">
+                        Click to select image file from computer
+                      </span>
+                      <span className="text-[9px] text-parchment-500 mt-0.5">PNG, JPG, WEBP up to 5MB</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageFileChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <div>
+                    <input
+                      type="url"
+                      placeholder="https://example.com/product-image.jpg"
+                      value={newProductImage}
+                      onChange={(e) => setNewProductImage(e.target.value)}
+                      className="w-full bg-noir-900 hairline-border p-2.5 text-parchment-100 focus:outline-none focus:border-amberfox text-xs"
+                    />
+                  </div>
+                )}
+
+                {/* Live Image Preview */}
+                {newProductImage && (
+                  <div className="flex items-center gap-3 pt-2 border-t border-amberfox/15">
+                    <div className="w-14 h-14 bg-white rounded-lg p-1 shrink-0 overflow-hidden border border-amberfox/40">
+                      <img
+                        src={newProductImage}
+                        alt="Preview"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] text-emerald-400 font-bold">✓ Image attached ready</p>
+                      <p className="text-[9px] text-parchment-500 truncate">
+                        {newProductImage.startsWith('data:') ? 'Local file base64 data' : newProductImage}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setNewProductImage('')}
+                        className="text-[9px] text-red-400 hover:underline uppercase font-bold mt-0.5"
+                      >
+                        Remove Image
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -563,15 +715,79 @@ export const AdminProductsInventoryView: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-[11px] uppercase tracking-luxury text-parchment-400 mb-1">
-                    Price (INR) *
+                    Retail Price (₹ MRP) *
                   </label>
                   <input
                     type="number"
                     required
                     value={newProductPrice}
                     onChange={(e) => setNewProductPrice(Number(e.target.value))}
-                    className="w-full bg-noir-950 hairline-border p-3 text-parchment-100 focus:outline-none focus:border-amberfox"
+                    className="w-full bg-noir-950 hairline-border p-3 text-parchment-100 focus:outline-none focus:border-amberfox font-bold text-amberfox"
                   />
+                </div>
+              </div>
+
+              {/* Dedicated GST Box */}
+              <div className="p-3.5 bg-noir-950/90 border border-amberfox/30 rounded-xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] uppercase tracking-luxury text-amberfox font-bold flex items-center gap-1.5">
+                    <Percent className="w-3.5 h-3.5" />
+                    <span>GST Tax Rate Box</span>
+                  </label>
+                  <div className="flex items-center gap-1">
+                    {[0, 5, 12, 18, 28].map((rate) => (
+                      <button
+                        key={rate}
+                        type="button"
+                        onClick={() => setNewProductGst(rate)}
+                        className={`px-2 py-0.5 text-[10px] rounded cursor-pointer border ${
+                          newProductGst === rate
+                            ? 'bg-amberfox border-amberfox text-noir-950 font-bold'
+                            : 'border-amberfox/20 bg-noir-900 text-parchment-400 hover:text-amberfox'
+                        }`}
+                      >
+                        {rate}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 items-center">
+                  <div>
+                    <span className="block text-[10px] text-parchment-400 mb-1">Custom GST %</span>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        value={newProductGst}
+                        onChange={(e) => setNewProductGst(Number(e.target.value))}
+                        className="w-full bg-noir-900 hairline-border p-2.5 text-parchment-100 focus:outline-none focus:border-amberfox"
+                      />
+                      <span className="absolute right-3 top-2.5 text-parchment-500 font-bold">%</span>
+                    </div>
+                  </div>
+
+                  {/* Realtime Tax Breakdown Display */}
+                  <div className="bg-noir-900/90 border border-amberfox/20 p-2.5 rounded-lg space-y-1 text-[10px]">
+                    <div className="flex justify-between text-parchment-400">
+                      <span>Taxable Value:</span>
+                      <span className="text-parchment-200 font-bold">
+                        ₹{(newProductPrice / (1 + (newProductGst || 0) / 100)).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-parchment-400">
+                      <span>GST Amount ({newProductGst}%):</span>
+                      <span className="text-amberfox font-bold">
+                        ₹{(newProductPrice - newProductPrice / (1 + (newProductGst || 0) / 100)).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-parchment-300 pt-1 border-t border-amberfox/10 font-bold">
+                      <span>Total Retail MRP:</span>
+                      <span className="text-emerald-400">₹{newProductPrice.toLocaleString()}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 

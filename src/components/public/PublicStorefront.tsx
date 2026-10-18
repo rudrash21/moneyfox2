@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronRight, ArrowRight, ShieldCheck, Truck, Receipt, CreditCard, Users, FileText, GitBranch, Clock, Wallet, Award, CheckCircle2, ShoppingBag, Package, Share2, RotateCcw, X, Eye, Sparkles } from 'lucide-react';
-import { BRAND_ASSETS, NINE_LEVEL_SCHEDULE, INITIAL_PRODUCTS } from '../../data/mockData';
+import { BRAND_ASSETS, NINE_LEVEL_SCHEDULE } from '../../data/mockData';
 import { ScreenView } from '../../types';
 import { NineLevelBinaryTree } from './NineLevelBinaryTree';
 import { GoldenWaveVisualizer } from './GoldenWaveVisualizer';
